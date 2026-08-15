@@ -78,10 +78,19 @@ p-valor exato de McNemar.
 
 ## 5. Free tier e limites de taxa
 
-O experimento roda no free tier do Google AI Studio. O modelo recomendado é
-`gemini-2.5-flash`: é o mais capaz entre os gratuitos, e síntese de programa exige
-raciocínio. `gemini-2.5-flash-lite` tem cota diária maior, mas desempenho bem pior em
-ARC — só vale para testes de infraestrutura.
+O experimento roda no free tier do Google AI Studio. Prefira o modelo `flash` mais
+recente que sua chave alcançar — hoje `gemini-3.7-flash`. Duas armadilhas já
+verificadas na prática:
+
+- os modelos `gemini-2.5-*` respondem **404** para chaves criadas recentemente
+  ("no longer available to new users");
+- um projeto com **billing habilitado não tem free tier**: sem créditos, toda chamada
+  volta como 429 "prepayment credits are depleted". Para usar o free tier, gere a chave
+  em um projeto sem billing.
+
+Para descobrir o que sua chave alcança, liste os modelos com
+`client.models.list()` (ver `google-genai`). Evite os aliases `gemini-flash-latest` e
+`gemini-pro-latest` na rodada oficial: eles mudam sozinhos e quebram a reprodutibilidade.
 
 O free tier impõe dois limites diferentes, que exigem tratamentos diferentes:
 

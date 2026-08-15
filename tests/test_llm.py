@@ -134,6 +134,17 @@ def test_daily_quota_aborts_without_retrying() -> None:
     assert slept == []
 
 
+def test_depleted_credits_abort_without_retrying() -> None:
+    credits_429: str = (
+        "429 RESOURCE_EXHAUSTED. Your prepayment credits are depleted. "
+        "Please go to AI Studio to manage your project and billing."
+    )
+    client, slept = gemini_with([Exception(credits_429), FakeResponse("never reached")])
+    with pytest.raises(QuotaExhausted, match="credits are depleted"):
+        ask(client)
+    assert slept == []
+
+
 def test_permanent_error_aborts_without_retrying() -> None:
     client, slept = gemini_with(
         [Exception("400 INVALID_ARGUMENT: API key not valid"), FakeResponse("never reached")]

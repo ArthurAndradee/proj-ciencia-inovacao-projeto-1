@@ -2,8 +2,8 @@ from typing import Any
 
 from arc_experiment.ratelimit import (
     RateLimiter,
-    is_daily_quota,
     is_retryable,
+    quota_exhaustion_reason,
     retry_delay,
     status_code,
 )
@@ -26,6 +26,10 @@ PER_MINUTE_429: str = (
 PER_DAY_429: str = (
     "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Quota exceeded for "
     "GenerateRequestsPerDayPerProjectPerModel'}}"
+)
+CREDITS_429: str = (
+    "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Your prepayment "
+    "credits are depleted. Please go to AI Studio to manage your project and billing.'}}"
 )
 
 
@@ -50,8 +54,19 @@ def test_retry_delay_absent() -> None:
 
 
 def test_daily_quota_is_distinguished_from_per_minute() -> None:
-    assert is_daily_quota(FakeAPIError(PER_DAY_429))
-    assert not is_daily_quota(FakeAPIError(PER_MINUTE_429))
+    reason = quota_exhaustion_reason(FakeAPIError(PER_DAY_429))
+    assert reason is not None and "daily quota" in reason
+    assert quota_exhaustion_reason(FakeAPIError(PER_MINUTE_429)) is None
+
+
+def test_depleted_prepaid_credits_are_not_waitable() -> None:
+    reason = quota_exhaustion_reason(FakeAPIError(CREDITS_429))
+    assert reason is not None and "credits are depleted" in reason
+    assert "billing" in reason
+
+
+def test_non_429_is_never_a_quota_exhaustion() -> None:
+    assert quota_exhaustion_reason(FakeAPIError("503 service unavailable")) is None
 
 
 def test_retryable_classification() -> None:

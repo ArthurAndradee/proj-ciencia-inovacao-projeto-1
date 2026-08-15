@@ -22,6 +22,7 @@ _RETRY_DELAY = re.compile(
     re.IGNORECASE,
 )
 _DAILY_QUOTA = re.compile(r"per\s*day|perday|daily\s+(?:limit|quota)", re.IGNORECASE)
+_BILLING = re.compile(r"credits?\s+(?:are\s+)?depleted|prepayment|billing", re.IGNORECASE)
 
 
 class QuotaExhausted(Exception):
@@ -50,8 +51,24 @@ def retry_delay(exc: BaseException) -> float | None:
     return float(match.group(1)) if match else None
 
 
-def is_daily_quota(exc: BaseException) -> bool:
-    return status_code(exc) == 429 and bool(_DAILY_QUOTA.search(str(exc)))
+def quota_exhaustion_reason(exc: BaseException) -> str | None:
+    """Why a 429 cannot be waited out within this run, or None if it can.
+
+    A per-minute 429 is worth retrying; a spent daily quota or an empty prepaid
+    balance is not — those need a new day or a human, so the run should stop
+    instead of spending its retries on every remaining task.
+    """
+    if status_code(exc) != 429:
+        return None
+    message: str = str(exc)
+    if _BILLING.search(message):
+        return (
+            "prepaid credits are depleted — a project with billing enabled has no "
+            "free tier; add credits or use a key from a project without billing"
+        )
+    if _DAILY_QUOTA.search(message):
+        return "daily quota exhausted"
+    return None
 
 
 def is_retryable(exc: BaseException) -> bool:

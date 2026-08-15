@@ -43,8 +43,8 @@ class Config:
 
         return cls(
             api_key=os.getenv("GOOGLE_API_KEY", ""),
-            generator_model=os.getenv("GENERATOR_MODEL", "gemini-2.5-flash"),
-            critic_model=os.getenv("CRITIC_MODEL", "gemini-2.5-flash"),
+            generator_model=os.getenv("GENERATOR_MODEL", "gemini-3.7-flash"),
+            critic_model=os.getenv("CRITIC_MODEL", "gemini-3.7-flash"),
             split=os.getenv("ARC_SPLIT", "evaluation"),
             sample_size=int(os.getenv("SAMPLE_SIZE", "100")),
             seed=int(os.getenv("SEED", "20260814")),

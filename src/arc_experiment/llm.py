@@ -120,10 +120,9 @@ class GeminiClient:
                     output_tokens=int(getattr(usage, "candidates_token_count", 0) or 0),
                 )
             except Exception as exc:
-                if ratelimit.is_daily_quota(exc):
-                    raise ratelimit.QuotaExhausted(
-                        f"daily quota exhausted for model {model}: {exc}"
-                    ) from exc
+                reason: str | None = ratelimit.quota_exhaustion_reason(exc)
+                if reason is not None:
+                    raise ratelimit.QuotaExhausted(f"{model}: {reason}") from exc
                 if not ratelimit.is_retryable(exc):
                     raise ratelimit.PermanentAPIError(str(exc)) from exc
                 last_error = exc
