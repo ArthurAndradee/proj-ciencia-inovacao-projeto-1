@@ -13,8 +13,10 @@ from dataclasses import dataclass
 
 REDACTION = "[REDACTED: leaked grid or code]"
 
-# Three or more single digits separated by spaces/commas: a serialized grid row.
-_GRID_ROW = re.compile(r"^[^\n\w]*(?:\d[ ,\t]+){2,}\d[^\n\w]*$", re.MULTILINE)
+# A line made only of three or more integers: a serialized grid row or a
+# coordinate/colour list. Multi-digit values are covered too, so the guard does
+# not depend on ARC's 0-9 alphabet.
+_GRID_ROW = re.compile(r"^[^\n\w]*(?:\d+[ ,\t]+){2,}\d+[^\n\w]*$", re.MULTILINE)
 # Fenced code blocks of any language.
 _CODE_FENCE = re.compile(r"```.*?```", re.DOTALL)
 # Python statements the critic has no business emitting.
