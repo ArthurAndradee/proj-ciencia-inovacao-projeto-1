@@ -43,7 +43,7 @@ O modo escolhe as condições comparadas:
 | `both` | as duas, sobre as mesmas tarefas (padrão) |
 
 Opções adicionais: `--split`, `--seed`, `--budget`, `--generator-model`,
-`--critic-model`, `--run-id`, `--fresh`, `--quiet`. Cada uma sobrepõe o valor
+`--critic-model`, `--rpm`, `--run-id`, `--fresh`, `--quiet`. Cada uma sobrepõe o valor
 correspondente do `.env` apenas naquela execução.
 
 ### Exemplos
@@ -76,7 +76,52 @@ com os pares de treino, média de chamadas e de iterações, eventos do filtro
 anti-vazamento e erros de API. O bloco final traz a comparação pareada com o
 p-valor exato de McNemar.
 
-## 5. Resultados e retomada
+## 5. Free tier e limites de taxa
+
+O experimento roda no free tier do Google AI Studio. O modelo recomendado é
+`gemini-2.5-flash`: é o mais capaz entre os gratuitos, e síntese de programa exige
+raciocínio. `gemini-2.5-flash-lite` tem cota diária maior, mas desempenho bem pior em
+ARC — só vale para testes de infraestrutura.
+
+O free tier impõe dois limites diferentes, que exigem tratamentos diferentes:
+
+**Requisições por minuto (RPM).** Configure `RPM` no `.env` (ou `--rpm N`) com o limite
+exato do seu projeto, visível em <https://aistudio.google.com/rate-limit>. O cliente
+espaça as chamadas proativamente, o que é mais barato do que descobrir o limite via
+erro 429. Se um 429 ocorrer mesmo assim, o cliente respeita o `retryDelay` que o
+servidor devolve, em vez de aplicar backoff cego.
+
+**Requisições por dia (RPD).** Não há como esperar dentro de uma execução. Ao detectar
+o esgotamento da cota diária, a rodada para com mensagem explícita e código de saída 2,
+preservando tudo que já foi gravado. Basta repetir o mesmo comando quando a cota
+resetar: a retomada pula as tarefas já concluídas.
+
+Erros permanentes (chave inválida, requisição malformada) falham de imediato, sem
+consumir tentativas.
+
+### Dimensionamento
+
+O custo de uma rodada em requisições é:
+
+```
+tarefas × condições × orçamento por tarefa
+```
+
+Uma rodada de 100 tarefas nas duas condições com `BUDGET_CALLS=12` custa **2.400
+requisições** — acima de qualquer cota diária do free tier. Opções:
+
+| Estratégia | Requisições | Observação |
+| --- | --- | --- |
+| 100 tarefas, budget 12 | 2.400 | precisa de 2 a 3 dias, com retomada |
+| 50 tarefas, budget 8 | 800 | cabe em um dia na maioria das cotas |
+| 30 tarefas, budget 6 | 360 | piloto confortável |
+
+O número é um teto: tarefas resolvidas cedo gastam menos que o orçamento. Reduzir o
+orçamento por tarefa é preferível a reduzir a amostra — o poder estatístico do teste
+pareado depende do número de tarefas, e um orçamento menor apenas aperta a competição
+entre as condições de forma igual para as duas.
+
+## 6. Resultados e retomada
 
 Cada rodada grava em `results/runs/<run-id>/`:
 
@@ -93,7 +138,7 @@ recomeçar do zero, use `--fresh`.
 Os `.jsonl` brutos não são versionados (ver `.gitignore`); o manifesto e os
 agregados usados na nota técnica devem ser commitados manualmente.
 
-## 6. Testes e tipagem
+## 7. Testes e tipagem
 
 ```bash
 uv run pytest      # suíte completa, sem rede

@@ -21,6 +21,7 @@ from .dataset import Task, find_task, sample_tasks
 from .experiment import run_experiment, run_id_for
 from .llm import GeminiClient, LLMClient, ScriptedClient
 from .metrics import load_outcomes
+from .ratelimit import PermanentAPIError, QuotaExhausted
 from .runner import Condition, TaskOutcome
 
 MODES: dict[str, tuple[Condition, ...]] = {
@@ -59,6 +60,12 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--split", choices=("training", "evaluation"))
     run.add_argument("--seed", type=int)
     run.add_argument("--budget", type=int, metavar="N", help="API calls per task")
+    run.add_argument(
+        "--rpm",
+        type=int,
+        metavar="N",
+        help="throttle to N requests per minute (0 disables; use your free-tier cap)",
+    )
     run.add_argument("--generator-model")
     run.add_argument("--critic-model")
     run.add_argument("--run-id", help="override the results directory name")
@@ -97,6 +104,7 @@ def config_from_args(args: argparse.Namespace) -> Config:
         ("sample", "sample_size"),
         ("generator_model", "generator_model"),
         ("critic_model", "critic_model"),
+        ("rpm", "rpm"),
     ):
         value = getattr(args, attribute, None)
         if value is not None:
@@ -117,6 +125,8 @@ def make_client(config: Config, dry_run: bool) -> LLMClient:
         api_key=config.api_key,
         temperature=config.temperature,
         max_output_tokens=config.max_output_tokens,
+        max_retries=config.max_retries,
+        rpm=config.rpm,
     )
 
 
@@ -162,19 +172,32 @@ def command_run(args: argparse.Namespace) -> int:
             flush=True,
         )
 
-    run_experiment(
-        config=config,
-        client=make_client(config, args.dry_run),
-        conditions=conditions,
-        tasks=tasks,
-        run_id=run_id,
-        on_progress=on_progress,
-    )
+    exit_code: int = 0
+    try:
+        run_experiment(
+            config=config,
+            client=make_client(config, args.dry_run),
+            conditions=conditions,
+            tasks=tasks,
+            run_id=run_id,
+            on_progress=on_progress,
+        )
+    except QuotaExhausted as exc:
+        print(f"\nDaily quota exhausted: {exc}", file=sys.stderr)
+        print(
+            "Results so far are saved. Re-run the same command once the quota "
+            "resets to continue from where it stopped.",
+            file=sys.stderr,
+        )
+        exit_code = 2
+    except PermanentAPIError as exc:
+        print(f"\nAPI rejected the request: {exc}", file=sys.stderr)
+        exit_code = 1
 
     print()
     print(render_run(run_dir, conditions))
     print(f"\nResults: {run_dir}")
-    return 0
+    return exit_code
 
 
 def render_run(

@@ -35,6 +35,8 @@ def make_config(tmp_path: Path) -> Config:
         budget_calls=4,
         temperature=0.0,
         max_output_tokens=256,
+        rpm=0,
+        max_retries=3,
         exec_timeout_s=10.0,
         exec_memory_mb=512,
         data_dir=tmp_path / "data",

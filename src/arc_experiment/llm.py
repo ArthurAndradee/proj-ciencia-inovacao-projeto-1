@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
+
+from . import ratelimit
 
 
 class BudgetExceeded(Exception):
@@ -57,15 +60,24 @@ class LLMClient(Protocol):
 
 
 class GeminiClient:
-    """Google AI Studio client with exponential backoff on transient failures."""
+    """Google AI Studio client, tuned for free-tier quotas.
+
+    Calls are spaced out to respect the per-minute cap, transient failures back
+    off exponentially (or by the delay the server asks for), permanent failures
+    raise immediately, and a spent daily quota aborts the run instead of burning
+    retries task after task.
+    """
 
     def __init__(
         self,
         api_key: str,
         temperature: float = 0.2,
         max_output_tokens: int = 8192,
-        max_retries: int = 4,
+        max_retries: int = 5,
         base_delay: float = 4.0,
+        rpm: int = 0,
+        limiter: ratelimit.RateLimiter | None = None,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         if not api_key:
             raise ValueError(
@@ -79,6 +91,8 @@ class GeminiClient:
         self.max_output_tokens: int = max_output_tokens
         self.max_retries: int = max_retries
         self.base_delay: float = base_delay
+        self._sleep: Callable[[float], None] = sleep
+        self._limiter: ratelimit.RateLimiter = limiter or ratelimit.RateLimiter(rpm, sleep=sleep)
 
     def generate(self, model: str, system: str, messages: list[Message]) -> Completion:
         types: Any = self._genai.types
@@ -94,6 +108,7 @@ class GeminiClient:
 
         last_error: Exception | None = None
         for attempt in range(self.max_retries):
+            self._limiter.acquire()
             try:
                 response: Any = self._client.models.generate_content(
                     model=model, contents=contents, config=config
@@ -104,12 +119,24 @@ class GeminiClient:
                     input_tokens=int(getattr(usage, "prompt_token_count", 0) or 0),
                     output_tokens=int(getattr(usage, "candidates_token_count", 0) or 0),
                 )
-            except Exception as exc:  # network, 429, 5xx
+            except Exception as exc:
+                if ratelimit.is_daily_quota(exc):
+                    raise ratelimit.QuotaExhausted(
+                        f"daily quota exhausted for model {model}: {exc}"
+                    ) from exc
+                if not ratelimit.is_retryable(exc):
+                    raise ratelimit.PermanentAPIError(str(exc)) from exc
                 last_error = exc
                 if attempt == self.max_retries - 1:
                     break
-                time.sleep(self.base_delay * (2**attempt))
+                self._sleep(self._backoff(attempt, exc))
         raise RuntimeError(f"API call failed after {self.max_retries} attempts: {last_error}")
+
+    def _backoff(self, attempt: int, exc: BaseException) -> float:
+        """Server-requested delay when offered, exponential backoff otherwise."""
+        requested: float | None = ratelimit.retry_delay(exc)
+        exponential: float = self.base_delay * (2**attempt)
+        return max(requested, 1.0) if requested is not None else exponential
 
 
 class ScriptedClient:

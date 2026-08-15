@@ -26,6 +26,8 @@ class Config:
     budget_calls: int
     temperature: float
     max_output_tokens: int
+    rpm: int
+    max_retries: int
     exec_timeout_s: float
     exec_memory_mb: int
     data_dir: Path
@@ -41,14 +43,16 @@ class Config:
 
         return cls(
             api_key=os.getenv("GOOGLE_API_KEY", ""),
-            generator_model=os.getenv("GENERATOR_MODEL", "gemini-2.5-pro"),
-            critic_model=os.getenv("CRITIC_MODEL", "gemini-2.5-pro"),
+            generator_model=os.getenv("GENERATOR_MODEL", "gemini-2.5-flash"),
+            critic_model=os.getenv("CRITIC_MODEL", "gemini-2.5-flash"),
             split=os.getenv("ARC_SPLIT", "evaluation"),
             sample_size=int(os.getenv("SAMPLE_SIZE", "100")),
             seed=int(os.getenv("SEED", "20260814")),
             budget_calls=int(os.getenv("BUDGET_CALLS", "12")),
             temperature=float(os.getenv("TEMPERATURE", "0.2")),
             max_output_tokens=int(os.getenv("MAX_OUTPUT_TOKENS", "8192")),
+            rpm=int(os.getenv("RPM", "0")),
+            max_retries=int(os.getenv("MAX_RETRIES", "5")),
             exec_timeout_s=float(os.getenv("EXEC_TIMEOUT_S", "10")),
             exec_memory_mb=int(os.getenv("EXEC_MEMORY_MB", "1024")),
             data_dir=path_of("DATA_DIR", "data"),
