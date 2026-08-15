@@ -15,6 +15,7 @@ arc-exp = "arc_experiment.cli:main"
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
+    "mypy>=1.11.0",
 ]
 
 [build-system]
@@ -26,3 +27,13 @@ packages = ["src/arc_experiment"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.mypy]
+files = ["src", "tests"]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["google.genai.*"]
+ignore_missing_imports = true
