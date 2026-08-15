@@ -97,6 +97,23 @@ def test_comparison_block_reports_the_contingency_and_p_value() -> None:
     assert "0.3750" in block
 
 
+def test_comparison_block_flags_excluded_api_errors() -> None:
+    block: str = report.comparison_block(
+        PairedComparison(
+            n_paired=8,
+            both_solved=3,
+            only_a=1,
+            only_b=2,
+            neither=2,
+            p_value=1.0,
+            label_a="baseline",
+            label_b="intervention",
+            excluded_api_errors=2,
+        )
+    )
+    assert "excluded from the comparison: 2 task(s)" in block
+
+
 def test_comparison_block_without_paired_tasks() -> None:
     empty = PairedComparison(0, 0, 0, 0, 0, 1.0)
     assert "nothing to compare" in report.comparison_block(empty)

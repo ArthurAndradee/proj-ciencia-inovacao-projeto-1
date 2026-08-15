@@ -98,6 +98,11 @@ def comparison_block(comparison: PairedComparison) -> str:
         f"  exact McNemar p-value: {comparison.p_value:.4f} "
         f"(discordant pairs: {comparison.discordant})"
     )
+    if comparison.excluded_api_errors:
+        lines.append(
+            f"  excluded from the comparison: {comparison.excluded_api_errors} task(s) "
+            "whose run hit an API error"
+        )
     return "\n".join(lines)
 
 

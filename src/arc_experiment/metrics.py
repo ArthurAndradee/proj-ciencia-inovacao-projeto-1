@@ -81,6 +81,7 @@ class PairedComparison:
     p_value: float
     label_a: str = "a"
     label_b: str = "b"
+    excluded_api_errors: int = 0
 
     @property
     def discordant(self) -> int:
@@ -108,10 +109,22 @@ def compare(
     label_a: str = "baseline",
     label_b: str = "intervention",
 ) -> PairedComparison:
-    """Compare two conditions over the tasks both of them actually ran."""
+    """Compare two conditions over the tasks both of them actually ran.
+
+    Tasks whose run hit an API error in either condition are dropped: an
+    unavailable model is not evidence about the method, and counting it as a
+    failure would hand the other condition a discordant pair it did not earn.
+    """
     solved_a: dict[str, bool] = {str(r["task_id"]): bool(r["solved"]) for r in records_a}
     solved_b: dict[str, bool] = {str(r["task_id"]): bool(r["solved"]) for r in records_b}
-    shared: list[str] = sorted(set(solved_a) & set(solved_b))
+    failed_calls: set[str] = {
+        str(record["task_id"])
+        for record in (*records_a, *records_b)
+        if record.get("error")
+    }
+    shared_all: set[str] = set(solved_a) & set(solved_b)
+    shared: list[str] = sorted(shared_all - failed_calls)
+    excluded: int = len(shared_all & failed_calls)
 
     both: int = sum(1 for t in shared if solved_a[t] and solved_b[t])
     only_a: int = sum(1 for t in shared if solved_a[t] and not solved_b[t])
@@ -127,4 +140,5 @@ def compare(
         p_value=exact_mcnemar_p(only_a, only_b),
         label_a=label_a,
         label_b=label_b,
+        excluded_api_errors=excluded,
     )

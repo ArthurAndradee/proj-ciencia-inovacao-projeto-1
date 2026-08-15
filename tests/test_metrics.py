@@ -5,7 +5,13 @@ import pytest
 from arc_experiment.metrics import ConditionSummary, compare, exact_mcnemar_p, summarize
 
 
-def record(task_id: str, condition: str, solved: bool, calls: int = 4) -> dict[str, Any]:
+def record(
+    task_id: str,
+    condition: str,
+    solved: bool,
+    calls: int = 4,
+    error: str | None = None,
+) -> dict[str, Any]:
     return {
         "task_id": task_id,
         "condition": condition,
@@ -17,7 +23,7 @@ def record(task_id: str, condition: str, solved: bool, calls: int = 4) -> dict[s
         "leak_events": 0,
         "input_tokens": 100,
         "output_tokens": 50,
-        "error": None,
+        "error": error,
     }
 
 
@@ -53,6 +59,31 @@ def test_compare_uses_only_shared_tasks() -> None:
     intervention = [record("a", "intervention", False)]
     result = compare(baseline, intervention)
     assert result.n_paired == 1 and result.only_a == 1
+
+
+def test_tasks_with_api_errors_leave_the_comparison() -> None:
+    baseline = [
+        record("a", "baseline", True),
+        record("b", "baseline", False, error="503 UNAVAILABLE"),
+        record("c", "baseline", False),
+    ]
+    intervention = [
+        record("a", "intervention", False),
+        record("b", "intervention", True),
+        record("c", "intervention", True),
+    ]
+    result = compare(baseline, intervention)
+    # Without the exclusion, task "b" would hand the intervention a free win.
+    assert result.n_paired == 2
+    assert result.excluded_api_errors == 1
+    assert (result.only_a, result.only_b) == (1, 1)
+
+
+def test_api_error_in_either_condition_excludes_the_task() -> None:
+    baseline = [record("a", "baseline", True)]
+    intervention = [record("a", "intervention", False, error="429 quota")]
+    result = compare(baseline, intervention)
+    assert result.n_paired == 0 and result.excluded_api_errors == 1
 
 
 def test_mcnemar_without_discordant_pairs() -> None:
