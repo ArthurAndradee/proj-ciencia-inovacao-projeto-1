@@ -47,6 +47,17 @@ def load_split(data_dir: Path, split: str) -> list[Task]:
     return [load_task(path) for path in sorted(split_dir.glob("*.json"))]
 
 
+def find_task(data_dir: Path, task_id: str, split: str | None = None) -> Task:
+    """Look a task up by id, trying `split` first and then the remaining splits."""
+    ordered: list[str] = [split] if split else []
+    ordered += [name for name in ("training", "evaluation") if name != split]
+    for candidate in ordered:
+        path: Path = data_dir / candidate / f"{task_id}.json"
+        if path.is_file():
+            return load_task(path)
+    raise FileNotFoundError(f"task {task_id!r} not found under {data_dir}")
+
+
 def sample_tasks(data_dir: Path, split: str, size: int, seed: int) -> list[Task]:
     """Deterministic sample: the same seed and split always yield the same tasks."""
     tasks: list[Task] = load_split(data_dir, split)
