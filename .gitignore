@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+
+# Execucoes brutas nao vao para o repositorio; os agregados sim.
+results/runs/
+!results/.gitkeep
