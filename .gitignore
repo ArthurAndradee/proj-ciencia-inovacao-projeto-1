@@ -11,3 +11,6 @@ results/runs/
 !results/.gitkeep
 
 results/gemma-run.log
+
+# Logs de execução ficam fora do repositório; os agregados entram na documentação.
+results/*.log
