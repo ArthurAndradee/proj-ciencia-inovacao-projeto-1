@@ -82,4 +82,4 @@ acesso ao gabarito, orçamento gasto em paralelo ou em série, e temperatura. Um
 resultado positivo sustenta a leitura pragmática — *gastar o orçamento deste jeito
 rende mais acertos* — e **não** a leitura causal — *a assimetria de informação é o que
 funciona*. Separar as causas exigiria condições adicionais, descritas em
-[experimental-decisions.md](experimental-decisions.md), seção 9.
+[experimental-decisions.md](experimental-decisions.md), seção 11.

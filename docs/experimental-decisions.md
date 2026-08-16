@@ -1,27 +1,27 @@
 # Decisões experimentais
 
-Registro das escolhas de desenho que o `README.md` não fixa, com a justificativa de
-cada uma e o ponto do código onde estão implementadas. São as decisões que precisam
-ser defendidas na nota técnica.
+Registro das escolhas de desenho, com a justificativa de cada uma e o ponto do código
+onde estão implementadas. São as decisões que precisam ser defendidas na nota técnica.
 
 A definição operacional das duas condições está em [strategies.md](strategies.md).
 
-## 1. O baseline é best-of-N, não self-debugging
+## 1. A condição de comparação é best-of-N
 
-**Decisão.** A condição de comparação é a amostragem independente (`sampling`), não o
-self-debugging que o `README.md` menciona.
+**Decisão.** A estratégia contra a qual o Crítico é medido é a amostragem independente
+(`sampling`): N programas gerados sem feedback, escolhendo o que reproduz mais pares de
+treino.
 
 **Por quê.** O orçamento controla **chamadas à API**, não programas. Nada obriga quem
-recebe N chamadas a gastá-las revisando um único programa em série: pode gastá-las
-gerando N programas independentes e ficando com o melhor pelos pares de treino. Essa
-estratégia é conhecidamente competitiva em síntese de programa. Comparar a
-intervenção contra o self-debugging responderia "qual canal de feedback conduz melhor
-a revisão", uma pergunta condicionada a *que se vá revisar*; comparar contra best-of-N
-responde a pergunta que interessa: **como vale a pena gastar o orçamento**.
+recebe N chamadas a gastá-las revisando um único programa em série — pode gastá-las
+gerando N candidatos independentes e ficando com o melhor. Amostragem com verificador é
+uma estratégia reconhecidamente forte em síntese de programa, e medir a intervenção
+contra uma alternativa mais fraca produziria uma vantagem que diz mais sobre o
+comparativo escolhido do que sobre o método.
 
-**Custo.** O texto original do `README.md` deixa de descrever o experimento executado.
-O README não foi alterado; este documento registra o desvio, que precisa aparecer na
-nota técnica.
+A escolha também muda a pergunta para melhor. Contra uma revisão sem oráculo, o
+experimento responderia "qual canal de feedback conduz melhor a revisão" — uma pergunta
+condicionada a *que se vá revisar*. Contra best-of-N, responde a pergunta que de fato
+interessa a quem tem um orçamento para gastar: **como vale a pena gastá-lo**.
 
 **Onde.** `runner.Condition`, `runner.solve_task`.
 
@@ -32,7 +32,7 @@ Gerador nunca vê o output do teste, em nenhuma das condições.
 
 **Por quê.** Sem isso não haveria assimetria de informação, e a condição `critic`
 viraria uma revisão comum com um passo intermediário. A assimetria precisa ser real
-para que o experimento teste o que o README propõe.
+para que exista algo a testar: é ela que define a intervenção.
 
 **Onde.** `prompts.generator_initial` monta a mensagem do Gerador apenas com treino +
 input do teste; `prompts.critic_request` inclui o output do teste. O teste
@@ -74,10 +74,10 @@ e qualquer código — blocos cercados ou linhas com `def`, `import`, `return`, 
 `while`. A resposta bruta é preservada no JSONL para auditoria, e cada redação é
 contada em `leak_events`.
 
-**Por quê.** A restrição arquitetônica do README ("evitar o vazamento da resposta
-esperada") não pode depender só da boa vontade do modelo. Com o filtro, o vazamento
-vira um evento mensurável: se `leak_events` for alto, o resultado da condição `critic`
-fica sob suspeita e isso aparece no relatório.
+**Por quê.** Impedir o vazamento da resposta esperada é a restrição que sustenta a
+validade da intervenção, e ela não pode depender só da boa vontade do modelo. Com o
+filtro, o vazamento vira um evento mensurável: se `leak_events` for alto, o resultado da
+condição `critic` fica sob suspeita e isso aparece no relatório.
 
 **Onde.** `guards.py`, aplicado em `agents.Critic.review`.
 
@@ -87,9 +87,9 @@ fica sob suspeita e isso aparece no relatório.
 e **todos** os agentes gastam dele. Em `sampling`, todas as chamadas são do Gerador;
 em `critic`, cada ciclo completo custa duas.
 
-**Por quê.** É o controle experimental exigido pelo README: sem ele, a comparação não
-seria atribuível à estratégia. Com ele, `critic` só vence se a densidade do feedback
-compensar a metade dos programas produzidos.
+**Por quê.** É o controle experimental que torna a comparação atribuível à estratégia:
+sem ele, a condição com mais recursos venceria por ter mais recursos. Com ele, `critic`
+só vence se a densidade do feedback compensar a metade dos programas produzidos.
 
 **Onde.** `llm.Budget`, instanciado uma vez por tarefa em `runner.solve_task` e
 compartilhado por `Generator` e `Critic`. O teste
@@ -123,8 +123,9 @@ gabarito, sem histórico das rodadas anteriores. O Gerador, ao contrário, mant�
 histórico completo da conversa.
 
 **Por quê.** Sem memória, o Crítico não consegue construir uma solução ao longo do
-diálogo — cada crítica é um julgamento independente da regra apresentada. Isso mantém
-o papel restrito a oráculo de validação, como o README exige.
+diálogo — cada crítica é um julgamento independente da regra apresentada. Isso mantém o
+papel restrito ao de oráculo de validação, que é o que a intervenção se propõe a testar:
+um Crítico capaz de acumular raciocínio viraria um segundo solucionador.
 
 **Onde.** `agents.Critic.review` monta a lista de mensagens do zero a cada chamada.
 
