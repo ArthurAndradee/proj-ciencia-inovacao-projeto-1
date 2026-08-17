@@ -1,0 +1,186 @@
+# Como executar o experimento
+
+Todo o ambiente é gerenciado por [uv](https://docs.astral.sh/uv/). O interpretador
+está fixado em `.python-version` e as versões exatas das dependências em `uv.lock`,
+ambos versionados — não é preciso instalar Python manualmente nem resolver pacotes.
+
+## 1. Preparar o ambiente
+
+```bash
+uv sync                     # cria .venv com as versões travadas em uv.lock
+cp .env.example .env        # preencher GOOGLE_API_KEY
+```
+
+A chave é obtida em <https://aistudio.google.com/apikey>. O arquivo `.env` está no
+`.gitignore` e nunca é gravado nos resultados: o manifesto de cada rodada registra a
+configuração sem a chave.
+
+## 2. Verificar a instalação sem gastar API
+
+```bash
+uv run arc-exp run --sample 4 --mode both --budget 3 --dry-run
+```
+
+`--dry-run` substitui o modelo por uma resposta fixa e percorre o pipeline inteiro
+(prompt, execução em sandbox, orçamento, registro, relatório). Serve para conferir a
+instalação; os números produzidos não têm valor experimental.
+
+## 3. Comandos
+
+| Comando | O que faz |
+| --- | --- |
+| `arc-exp run --task <id>` | roda uma tarefa específica |
+| `arc-exp run --sample <n>` | sorteia `n` tarefas com a seed configurada |
+| `arc-exp report --run-id <id>` | re-exibe o relatório de uma rodada concluída |
+| `arc-exp tasks --sample <n>` | lista quais tarefas a seed seleciona, sem executar |
+
+O modo escolhe as condições comparadas (ver [strategies.md](strategies.md)):
+
+| `--mode` | Condição |
+| --- | --- |
+| `sampling` | apenas a amostragem independente (best-of-N) |
+| `critic` | apenas a revisão guiada pelo Agente Crítico |
+| `both` | as duas, sobre as mesmas tarefas (padrão) |
+
+Opções adicionais: `--split`, `--seed`, `--budget`, `--generator-model`,
+`--critic-model`, `--sampling-temperature`, `--rpm`, `--run-id`, `--fresh`, `--quiet`.
+Cada uma sobrepõe o valor correspondente do `.env` apenas naquela execução.
+
+### Exemplos
+
+```bash
+# uma tarefa, as duas condições, para inspecionar o comportamento
+uv run arc-exp run --task 007bbfb7 --mode both
+
+# rodada oficial: 100 tarefas de evaluation, orçamento ímpar de 7 chamadas
+uv run arc-exp run --sample 100 --mode both --budget 7
+
+# só a revisão guiada, em uma tarefa que a amostragem errou
+uv run arc-exp run --task 0520fde7 --mode critic
+```
+
+## 4. Leitura do relatório
+
+```
+Task      sampling   critic
+--------  --------  -------
+0520fde7   ✗ 7c/7i   ✓ 7c/4i
+```
+
+`7c/7i` = 7 chamadas à API e 7 iterações de código. Em `critic` metade das chamadas
+vai para o Crítico, então o mesmo orçamento rende menos programas — é exatamente essa
+troca que o experimento mede.
+
+A tabela de condições traz acurácia (acerto no par de teste), taxa de consistência
+com os pares de treino, média de chamadas e de iterações, eventos do filtro
+anti-vazamento e erros de API. O bloco final traz a comparação pareada com o
+p-valor exato de McNemar.
+
+## 5. Free tier e limites de taxa
+
+O experimento roda no free tier do Google AI Studio. Prefira o modelo `flash` mais
+recente que sua chave alcançar — hoje `gemini-3.7-flash`. Duas armadilhas já
+verificadas na prática:
+
+- os modelos `gemini-2.5-*` respondem **404** para chaves criadas recentemente
+  ("no longer available to new users");
+- um projeto com **billing habilitado não tem free tier**: sem créditos, toda chamada
+  volta como 429 "prepayment credits are depleted". Para usar o free tier, gere a chave
+  em um projeto sem billing.
+
+Para descobrir o que sua chave alcança, liste os modelos com
+`client.models.list()` (ver `google-genai`). Evite os aliases `gemini-flash-latest` e
+`gemini-pro-latest` na rodada oficial: eles mudam sozinhos e quebram a reprodutibilidade.
+
+O free tier impõe dois limites diferentes, que exigem tratamentos diferentes:
+
+**Requisições por minuto (RPM).** Configure `RPM` no `.env` (ou `--rpm N`) com o limite
+exato do seu projeto, visível em <https://aistudio.google.com/rate-limit>. O cliente
+espaça as chamadas proativamente, o que é mais barato do que descobrir o limite via
+erro 429. Se um 429 ocorrer mesmo assim, o cliente respeita o `retryDelay` que o
+servidor devolve, em vez de aplicar backoff cego.
+
+**Requisições por dia (RPD).** Não há como esperar dentro de uma execução. Ao detectar
+o esgotamento da cota diária, a rodada para com mensagem explícita e código de saída 2,
+preservando tudo que já foi gravado. Basta repetir o mesmo comando quando a cota
+resetar: a retomada pula as tarefas já concluídas.
+
+Erros permanentes (chave inválida, requisição malformada) falham de imediato, sem
+consumir tentativas.
+
+### Dimensionamento
+
+O custo de uma rodada em requisições é:
+
+```
+tarefas × condições × orçamento por tarefa
+```
+
+A rodada oficial (100 tarefas, duas condições, `BUDGET_CALLS=7`) custa **1.400
+requisições** no teto — acima de qualquer cota diária do free tier, então precisa de
+alguns dias apoiados na retomada.
+
+| Configuração | Requisições | Observação |
+| --- | --- | --- |
+| 100 tarefas, budget 7 | 1.400 | rodada oficial; 2 a 3 dias com retomada |
+| 50 tarefas, budget 7 | 700 | cabe em um dia, mas sem poder estatístico |
+| 10 tarefas, budget 7 | 140 | verificação de diversidade antes da oficial |
+
+O número é um teto: tarefas resolvidas cedo gastam menos que o orçamento. Reduzir o
+orçamento por tarefa é preferível a reduzir a amostra — o poder do teste pareado
+depende do número de tarefas (ver decisão 9 em `experimental-decisions.md`), e um
+orçamento menor apenas aperta a competição de forma igual para as duas condições.
+
+**O orçamento deve ser ímpar.** `critic` alterna Gerador→Crítico→Gerador; com um
+orçamento par, a última chamada só poderia ser uma crítica sem revisão subsequente, e
+o laço corretamente a recusa — a condição gastaria uma chamada a menos que a
+amostragem, sem proveito.
+
+### Verificação de diversidade
+
+A amostragem só é um baseline honesto se as N amostras forem de fato diferentes entre
+si. Antes da rodada oficial, vale medir isso com o modelo que será usado:
+
+```bash
+uv run arc-exp run --sample 10 --mode sampling --budget 7 --run-id diversity-check
+```
+
+Depois, conte quantos programas distintos cada tarefa produziu:
+
+```bash
+uv run python -c "
+import json, pathlib
+for line in pathlib.Path('results/runs/diversity-check/sampling.jsonl').read_text().splitlines():
+    r = json.loads(line)
+    codes = {i['code'] for i in r['iterations'] if i['code']}
+    print(r['task_id'], len(codes), 'distinto(s) de', len(r['iterations']))
+"
+```
+
+Se a mediana ficar em 1 ou 2, a temperatura não está entregando diversidade e precisa
+subir (`--sampling-temperature`) antes da rodada oficial — caso contrário o best-of-N
+vira uma única tentativa repetida, e a comparação perde o sentido.
+
+## 6. Resultados e retomada
+
+Cada rodada grava em `results/runs/<run-id>/`:
+
+- `manifest.json` — commit do Git, versão do Python, configuração sem segredos,
+  hash dos prompts de sistema e lista de tarefas;
+- `sampling.jsonl` e `critic.jsonl` — uma linha por tarefa, com todas as iterações,
+  regras, códigos, feedbacks do Crítico (versão filtrada e bruta) e contabilidade do
+  orçamento.
+
+O `run-id` é derivado da configuração (`evaluation-n100-seed20260814-b7`), então
+repetir o comando **retoma** a rodada e pula as tarefas já registradas. Para
+recomeçar do zero, use `--fresh`.
+
+Os `.jsonl` brutos não são versionados (ver `.gitignore`); o manifesto e os
+agregados usados na nota técnica devem ser commitados manualmente.
+
+## 7. Testes e tipagem
+
+```bash
+uv run pytest      # suíte completa, sem rede
+uv run mypy        # tipagem estrita em src/ e tests/
+```

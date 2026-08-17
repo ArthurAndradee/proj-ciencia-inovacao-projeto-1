@@ -1,0 +1,16 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+
+# Execucoes brutas nao vao para o repositorio; os agregados sim.
+results/runs/
+!results/.gitkeep
+
+results/gemma-run.log
+
+# Logs de execução ficam fora do repositório; os agregados entram na documentação.
+results/*.log
