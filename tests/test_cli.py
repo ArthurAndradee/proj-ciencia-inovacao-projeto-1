@@ -33,10 +33,25 @@ def test_modes_map_to_conditions() -> None:
 def test_pacing_note_reports_the_throttled_wall_time(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("RPM", "10")
     monkeypatch.setenv("BUDGET_CALLS", "7")
+    # Pinned, or the note would be computed from whatever .env happens to hold
+    # and the expected wall time would move with the developer's own key list.
+    monkeypatch.setenv("GOOGLE_API_KEYS", "k1")
     note: str = cli.pacing_note(10, Config.from_env())
     # A floor, explicitly: model latency is not in it and can dominate.
     assert "6s between calls" in note and "at least ~7 min" in note
     assert "latency adds on top" in note
+
+
+def test_pacing_note_divides_the_floor_among_the_keys(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The throttle is per key, so N keys wait N times less in total."""
+    monkeypatch.setenv("RPM", "10")
+    monkeypatch.setenv("BUDGET_CALLS", "7")
+    monkeypatch.setenv("GOOGLE_API_KEYS", "k1,k2,k3,k4,k5,k6,k7")
+    note: str = cli.pacing_note(10, Config.from_env())
+    assert "on each of 7 key(s)" in note
+    assert "at least ~1 min" in note  # seven times less than the single-key floor
 
 
 def test_task_and_sample_are_mutually_exclusive() -> None:

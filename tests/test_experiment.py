@@ -30,7 +30,7 @@ TASKS: list[Task] = [
 
 def make_config(tmp_path: Path) -> Config:
     return Config(
-        api_key="",
+        api_keys=("k1", "k2"),
         generator_model="gen",
         critic_model="crit",
         split="evaluation",
@@ -149,12 +149,15 @@ def test_workers_record_every_task_exactly_once(tmp_path: Path) -> None:
         assert len(ids) == len(set(ids))  # concurrent appends never duplicated
 
 
-def test_manifest_records_config_without_the_api_key(tmp_path: Path) -> None:
+def test_manifest_records_the_key_count_but_never_the_keys(tmp_path: Path) -> None:
     config = make_config(tmp_path)
     run_dir: Path = config.results_dir / "runs" / "manual"
     run_dir.mkdir(parents=True)
     manifest: dict[str, Any] = json.loads(write_manifest(run_dir, config, TASKS).read_text())
-    assert "api_key" not in manifest["config"]
+    assert "api_keys" not in manifest["config"]
+    assert "k1" not in manifest["config"].values()
+    # How many quotas the run could draw on explains its pace and where it stopped.
+    assert manifest["config"]["key_count"] == 2
     assert manifest["task_ids"] == ["t1", "t2"]
     assert set(manifest["prompt_digest"]) == {"generator_system", "critic_system"}
 
@@ -185,3 +188,67 @@ def test_progress_callback_receives_each_outcome(tmp_path: Path) -> None:
         on_progress=lambda outcome: seen.append(outcome.task_id),
     )
     assert seen == ["t1", "t2"]
+
+
+def test_a_key_running_dry_mid_run_does_not_end_the_run(tmp_path: Path) -> None:
+    """The scenario the pool exists for: one quota dies, the run carries on.
+
+    A single-key run raises `QuotaExhausted` out of the first spent call and
+    loses every task still in flight. With a pool, the dead key steps aside and
+    the remaining keys finish the work.
+    """
+    from arc_experiment.keypool import PooledClient
+    from arc_experiment.llm import Completion, Message
+    from arc_experiment.ratelimit import QuotaExhausted
+
+    class DyingKey:
+        """Answers `budget` times, then reports its daily quota gone, forever."""
+
+        def __init__(self, budget: int) -> None:
+            self.budget: int = budget
+            self.lock = threading.Lock()
+
+        def generate(
+            self,
+            model: str,
+            system: str,
+            messages: list[Message],
+            temperature: float | None = None,
+        ) -> Completion:
+            with self.lock:
+                if self.budget <= 0:
+                    raise QuotaExhausted(f"{model}: daily quota exhausted")
+                self.budget -= 1
+            return Completion(text=CORRECT)
+
+    class HealthyKey:
+        def generate(
+            self,
+            model: str,
+            system: str,
+            messages: list[Message],
+            temperature: float | None = None,
+        ) -> Completion:
+            return Completion(text=CORRECT)
+
+    dying = DyingKey(budget=3)
+    pool = PooledClient([dying, HealthyKey()])
+
+    run_dir: Path = run_experiment(
+        make_config(tmp_path),
+        pool,
+        conditions=list(PAIRED),
+        tasks=MANY,
+        workers=4,
+    )
+
+    for condition in PAIRED:
+        ids = [
+            json.loads(line)["task_id"]
+            for line in (run_dir / f"{condition.value}.jsonl").read_text().splitlines()
+        ]
+        assert sorted(ids) == sorted(task.task_id for task in MANY)
+
+    usage = {entry["key"]: entry for entry in pool.usage()}
+    assert "gen" in usage["key1"]["exhausted"]  # the dead key was retired
+    assert usage["key2"]["calls"] > 0  # and the survivor took over

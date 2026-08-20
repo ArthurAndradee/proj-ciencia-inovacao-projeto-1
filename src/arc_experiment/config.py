@@ -13,11 +13,26 @@ from dotenv import load_dotenv
 REPO_ROOT: Path = Path(__file__).resolve().parents[2]
 
 
+def parse_api_keys(joined: str) -> tuple[str, ...]:
+    """Comma-separated keys, in order, without blanks or repeats.
+
+    Order matters: it is the order the pool falls back through, and the labels
+    reported at the end of a run refer to it. Duplicates are dropped because two
+    entries of the same key would look like twice the quota and deliver once.
+    """
+    keys: list[str] = []
+    for raw in joined.split(","):
+        key: str = raw.strip()
+        if key and key not in keys:
+            keys.append(key)
+    return tuple(keys)
+
+
 @dataclass(frozen=True)
 class Config:
     """Every knob of the experiment, resolved once and passed around read-only."""
 
-    api_key: str
+    api_keys: tuple[str, ...]
     generator_model: str
     critic_model: str
     split: str
@@ -44,7 +59,9 @@ class Config:
             return raw if raw.is_absolute() else REPO_ROOT / raw
 
         return cls(
-            api_key=os.getenv("GOOGLE_API_KEY", ""),
+            api_keys=parse_api_keys(
+                os.getenv("GOOGLE_API_KEYS", "") or os.getenv("GOOGLE_API_KEY", "")
+            ),
             generator_model=os.getenv("GENERATOR_MODEL", "gemini-3.7-flash"),
             critic_model=os.getenv("CRITIC_MODEL", "gemini-3.7-flash"),
             split=os.getenv("ARC_SPLIT", "evaluation"),
@@ -64,10 +81,15 @@ class Config:
         )
 
     def manifest(self) -> dict[str, Any]:
-        """Serializable view of the configuration, with the API key stripped."""
+        """Serializable view of the configuration, with the API keys stripped.
+
+        The count stays: how many quotas a run had access to explains its pace
+        and where it stopped, and it cannot be recovered from the results later.
+        """
         data: dict[str, Any] = {
             key: (str(value) if isinstance(value, Path) else value)
             for key, value in asdict(self).items()
         }
-        data.pop("api_key")
+        data.pop("api_keys")
+        data["key_count"] = len(self.api_keys)
         return data
