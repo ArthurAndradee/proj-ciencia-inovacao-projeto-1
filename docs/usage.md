@@ -8,12 +8,13 @@ ambos versionados — não é preciso instalar Python manualmente nem resolver p
 
 ```bash
 uv sync                     # cria .venv com as versões travadas em uv.lock
-cp .env.example .env        # preencher GOOGLE_API_KEY
+cp .env.example .env        # preencher GOOGLE_API_KEYS
 ```
 
-A chave é obtida em <https://aistudio.google.com/apikey>. O arquivo `.env` está no
-`.gitignore` e nunca é gravado nos resultados: o manifesto de cada rodada registra a
-configuração sem a chave.
+As chaves são obtidas em <https://aistudio.google.com/apikey> e vão em
+`GOOGLE_API_KEYS`, separadas por vírgula (`GOOGLE_API_KEY`, no singular, continua
+aceita para uma chave só). O arquivo `.env` está no `.gitignore` e nunca é gravado nos
+resultados: o manifesto registra apenas **quantas** chaves a rodada usou, nunca quais.
 
 ## 2. Verificar a instalação sem gastar API
 
@@ -59,6 +60,10 @@ uv run arc-exp run --sample 100 --mode both --budget 7
 uv run arc-exp run --task 0520fde7 --mode critic
 ```
 
+Para ver o experimento por dentro — a sequência real de mensagens trocadas com o
+modelo nas duas condições, extraída da rodada oficial — veja
+[exemplo-execucao.md](exemplo-execucao.md).
+
 ## 4. Leitura do relatório
 
 ```
@@ -95,18 +100,41 @@ Para descobrir o que sua chave alcança, liste os modelos com
 O free tier impõe dois limites diferentes, que exigem tratamentos diferentes:
 
 **Requisições por minuto (RPM).** Configure `RPM` no `.env` (ou `--rpm N`) com o limite
-exato do seu projeto, visível em <https://aistudio.google.com/rate-limit>. O cliente
-espaça as chamadas proativamente, o que é mais barato do que descobrir o limite via
-erro 429. Se um 429 ocorrer mesmo assim, o cliente respeita o `retryDelay` que o
-servidor devolve, em vez de aplicar backoff cego.
+exato do seu projeto. O valor **vale por chave**: cada projeto tem seu próprio teto e o
+cliente de cada chave espaça as próprias chamadas. Não confie no painel de limites do
+AI Studio — ele já anunciou 150.000 req/dia onde o limite real era 500. O número
+verdadeiro está no campo `limit:` da mensagem completa do erro 429. Se um 429 ocorrer
+mesmo assim, o cliente respeita o `retryDelay` devolvido pelo servidor, em vez de
+aplicar backoff cego.
 
-**Requisições por dia (RPD).** Não há como esperar dentro de uma execução. Ao detectar
-o esgotamento da cota diária, a rodada para com mensagem explícita e código de saída 2,
-preservando tudo que já foi gravado. Basta repetir o mesmo comando quando a cota
-resetar: a retomada pula as tarefas já concluídas.
+**Requisições por dia (RPD).** Não há como esperar dentro de uma execução. Com várias
+chaves, o esgotamento de uma não termina a rodada: aquela chave sai de circulação
+**para aquele modelo** (a cota é por modelo, então ela ainda pode servir outro) e as
+chamadas seguintes vão para as demais. Só quando todas esgotam a rodada para, com
+mensagem explícita e código de saída 2, preservando tudo que já foi gravado. Basta
+repetir o mesmo comando quando as cotas resetarem: a retomada pula as tarefas
+concluídas.
 
 Erros permanentes (chave inválida, requisição malformada) falham de imediato, sem
-consumir tentativas.
+consumir tentativas e sem queimar as outras chaves — uma requisição malformada falharia
+igual em todas.
+
+### Várias chaves
+
+Cada chave vira um cliente próprio, com seu próprio limitador de RPM. As chamadas vão
+sempre para a chave menos usada entre as ainda disponíveis, de modo que as cotas drenam
+parelho em vez de esgotar uma de cada vez.
+
+Por padrão, a rodada usa **um worker por chave** (`--workers N` sobrepõe). Ao final, o
+console mostra e `keys.json` grava quantas chamadas cada chave atendeu e quais
+esgotaram — é o que diz se a rodada parou por cota ou por outro motivo.
+
+Duas advertências:
+
+- a cota é contada **por projeto**, não por chave: várias chaves do mesmo projeto
+  compartilham a mesma cota e não somam capacidade nenhuma;
+- o limitador controla RPM, não tokens por minuto. Se aparecerem 429 mesmo com as
+  chaves distribuídas, o teto de TPM é o gargalo — reduza `--workers`.
 
 ### Dimensionamento
 
@@ -117,13 +145,13 @@ tarefas × condições × orçamento por tarefa
 ```
 
 A rodada oficial (100 tarefas, duas condições, `BUDGET_CALLS=7`) custa **1.400
-requisições** no teto — acima de qualquer cota diária do free tier, então precisa de
-alguns dias apoiados na retomada.
+requisições** no teto. A capacidade de um dia é `cota diária por chave × nº de chaves`,
+e a cota real precisa ser lida do campo `limit:` de um erro 429 — nunca do painel.
 
 | Configuração | Requisições | Observação |
 | --- | --- | --- |
-| 100 tarefas, budget 7 | 1.400 | rodada oficial; 2 a 3 dias com retomada |
-| 50 tarefas, budget 7 | 700 | cabe em um dia, mas sem poder estatístico |
+| 100 tarefas, budget 7 | 1.400 | rodada oficial |
+| 50 tarefas, budget 7 | 700 | cabe em menos tempo, com menos poder estatístico |
 | 10 tarefas, budget 7 | 140 | verificação de diversidade antes da oficial |
 
 O número é um teto: tarefas resolvidas cedo gastam menos que o orçamento. Reduzir o
