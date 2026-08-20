@@ -90,7 +90,7 @@ def test_every_key_spent_raises_quota_exhausted() -> None:
 
     with pytest.raises(QuotaExhausted) as excinfo:
         generate(pool)
-    assert "every key is out of quota" in str(excinfo.value)
+    assert "no key left to serve it" in str(excinfo.value)
 
 
 def test_a_bad_request_propagates_instead_of_burning_every_key() -> None:
@@ -152,6 +152,7 @@ def test_usage_reports_calls_apart_from_failures() -> None:
         "key": "key1",
         "calls": 0,
         "failures": 1,
+        "rejected": False,
         "exhausted": ["flash"],
     }
     assert usage["key2"]["calls"] == 2
@@ -161,3 +162,54 @@ def test_usage_reports_calls_apart_from_failures() -> None:
 def test_an_empty_pool_is_rejected_early() -> None:
     with pytest.raises(ValueError, match="no API keys"):
         PooledClient([])
+
+
+def test_a_rejected_key_is_dropped_instead_of_killing_the_run() -> None:
+    """A 401 belongs to one key; the run must survive it.
+
+    Regression: a single unauthenticated key propagated out of the pool and
+    took all seven workers down with it, finishing zero tasks.
+    """
+    bad = FakeKeyClient("bad", raises=PermanentAPIError("401 UNAUTHENTICATED"))
+    good = FakeKeyClient("good")
+    pool = PooledClient([bad, good])
+
+    assert generate(pool) == "answer from good"
+    assert pool.usage()[0]["rejected"] is True
+
+
+def test_a_rejected_key_is_never_tried_again_for_any_model() -> None:
+    bad = FakeKeyClient("bad", raises=PermanentAPIError("403 PERMISSION_DENIED"))
+    good = FakeKeyClient("good")
+    pool = PooledClient([bad, good])
+
+    for _ in range(4):
+        generate(pool, model="flash")
+    generate(pool, model="pro")
+
+    assert len(bad.calls) == 1  # one wasted call, then out for good
+    assert len(good.calls) == 5
+
+
+def test_a_malformed_request_still_aborts() -> None:
+    """A 400 fails the same on every key; dropping them one by one is wrong."""
+    first = FakeKeyClient("first", raises=PermanentAPIError("400 INVALID_ARGUMENT"))
+    second = FakeKeyClient("second")
+    pool = PooledClient([first, second])
+
+    with pytest.raises(PermanentAPIError):
+        generate(pool)
+    assert second.calls == []
+    assert pool.usage()[0]["rejected"] is False
+
+
+def test_every_key_rejected_gives_a_clear_error() -> None:
+    pool = PooledClient(
+        [
+            FakeKeyClient("a", raises=PermanentAPIError("401 UNAUTHENTICATED")),
+            FakeKeyClient("b", raises=PermanentAPIError("401 UNAUTHENTICATED")),
+        ]
+    )
+    with pytest.raises(QuotaExhausted) as excinfo:
+        generate(pool)
+    assert "rejected" in str(excinfo.value)

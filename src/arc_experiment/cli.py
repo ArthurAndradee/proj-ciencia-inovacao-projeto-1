@@ -317,7 +317,11 @@ def key_usage_table(client: PooledClient, run_dir: Path) -> str:
     lines: list[str] = ["API keys"]
     for entry in usage:
         spent: str = (
-            f"  spent: {', '.join(entry['exhausted'])}" if entry["exhausted"] else ""
+            "  REJECTED by the API (dropped from the pool)"
+            if entry.get("rejected")
+            else f"  spent: {', '.join(entry['exhausted'])}"
+            if entry["exhausted"]
+            else ""
         )
         failures: str = f"  {entry['failures']} failure(s)" if entry["failures"] else ""
         lines.append(f"  {entry['key']}: {entry['calls']} call(s){failures}{spent}")

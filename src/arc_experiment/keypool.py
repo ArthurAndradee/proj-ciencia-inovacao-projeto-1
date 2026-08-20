@@ -12,6 +12,7 @@ never learn that more than one key exists.
 
 from __future__ import annotations
 
+import sys
 import threading
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -29,10 +30,11 @@ class KeyState:
     client: LLMClient
     attempts: int = 0
     failures: int = 0
+    dead: bool = False
     exhausted_models: set[str] = field(default_factory=set)
 
     def serves(self, model: str) -> bool:
-        return model not in self.exhausted_models
+        return not self.dead and model not in self.exhausted_models
 
 
 class PooledClient:
@@ -94,10 +96,16 @@ class PooledClient:
             key: KeyState | None = self._claim(model)
             if key is None:
                 raise ratelimit.QuotaExhausted(
-                    f"{model}: every key is out of quota ({self._summary(model)})"
+                    f"{model}: no key left to serve it ({self._summary(model)})"
                 )
             try:
                 return key.client.generate(model, system, messages, temperature)
+            except ratelimit.PermanentAPIError as exc:
+                # A rejected credential is this key's problem alone; a bad
+                # request would fail the same way on every key, so it aborts.
+                if not ratelimit.is_key_fault(exc):
+                    raise
+                self._condemn(key, exc)
             except ratelimit.QuotaExhausted:
                 # This key's daily allowance for this model is gone. Waiting
                 # cannot fix it, but another key is a different quota entirely.
@@ -128,11 +136,27 @@ class PooledClient:
             key.exhausted_models.add(model)
             key.failures += 1
 
+    def _condemn(self, key: KeyState, exc: BaseException) -> None:
+        """Drop a key the API refuses to authenticate, for every model."""
+        with self._lock:
+            already: bool = key.dead
+            key.dead = True
+            key.failures += 1
+        if not already:
+            # Said once, loudly: a run silently short one key is a run whose
+            # capacity no longer matches what the operator thinks it is.
+            print(
+                f"warning: {key.label} rejected by the API and dropped from the "
+                f"pool ({str(exc)[:120]})",
+                file=sys.stderr,
+                flush=True,
+            )
+
     def _summary(self, model: str) -> str:
         with self._lock:
             return ", ".join(
                 f"{k.label}: {k.attempts - k.failures} call(s)"
-                + ("" if k.serves(model) else ", spent")
+                + (", rejected" if k.dead else "" if k.serves(model) else ", spent")
                 for k in self._keys
             )
 
@@ -146,6 +170,7 @@ class PooledClient:
                     # an attempt that never became an answer. Report both.
                     "calls": k.attempts - k.failures,
                     "failures": k.failures,
+                    "rejected": k.dead,
                     "exhausted": sorted(k.exhausted_models),
                 }
                 for k in self._keys
