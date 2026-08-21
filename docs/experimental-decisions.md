@@ -191,3 +191,48 @@ nota técnica: a taxa de acerto absoluta depende fortemente dele.
    modelo indisponível não é evidência sobre o método, e contá-la como falha daria à
    outra condição um par discordante que ela não conquistou. O relatório informa
    quantas tarefas saíram por esse motivo; se forem muitas, a rodada deve ser repetida.
+
+## 12. Extensão da amostra para 270 tarefas
+
+**Declarado em 20/08/2026, antes de executar a extensão.**
+
+**Decisão.** A amostra passa de 100 para 270 tarefas de `data/evaluation`, mesma seed
+(20260814). A **análise principal do experimento é a das 270 tarefas**. O resultado das
+100 primeiras, já registrado em [results.md](results.md), passa a valer como **análise
+interina** — descritivo, não a conclusão do estudo.
+
+**Por quê.** Não por caça a significância. Com o efeito observado (proporção discordante
+de 0,529), detectar diferença exigiria ~13.300 tarefas; nenhum N viável no split de 400
+resolve isso. A extensão compra **precisão**: o intervalo de confiança de 95% para a
+proporção de discordâncias passa de [0,31, 0,74] com 100 tarefas para ~[0,38, 0,66] com
+270. Isto é, permite afirmar que uma eventual vantagem do crítico é **menor que ~7 pp**,
+onde hoje o intervalo não descarta nem uma vantagem grande. Um resultado nulo com limite
+superior estreito diz mais do que um resultado nulo sem limite algum.
+
+**O custo estatístico, declarado.** Analisar os mesmos dados duas vezes (em 100 e em 270)
+dá duas chances de cruzar α = 0,05. Simulação sob H₀ com 20.000 réplicas: a taxa de erro
+tipo I sobe de 3,8% (só as 270) para 6,3% (aceitando qualquer das duas). É por isso que a
+análise principal é fixada **agora** como a das 270: reportar a interina como conclusão
+alternativa, caso a final não agrade, é justamente o que inflaria o erro. Se ambas forem
+reivindicadas na nota, aplicar a correção de Pocock (α = 0,0294 em cada).
+
+**Nenhuma tarefa é refeita.** Verificado que `random.sample(pool, 270)` com esta seed
+contém as 100 já executadas, como prefixo idêntico — as duas amostras caem no mesmo ramo
+do algoritmo do CPython (`n <= setsize`, Fisher-Yates parcial). A retomada por `task_id`
+pula as 100, e apenas 170 tarefas são novas. Esta propriedade **não** é garantia da
+linguagem: o que sustenta a reprodutibilidade é a lista literal de `task_ids` gravada em
+`manifest.json`, não o algoritmo de amostragem.
+
+**A hipótese principal não muda.** Continua sendo a pré-especificada desde o início: sob
+orçamento fixo de chamadas, `critic` supera `sampling` em acurácia, testada por McNemar
+exato sobre os pares discordantes.
+
+**A hipótese do overfit permanece exploratória.** A observação de que o crítico produz
+mais programas consistentes com o treino mas converte menos deles em acerto no teste
+(23,3% contra 11,1% de overfit) nasceu da inspeção das 100 primeiras tarefas. Testá-la nos
+mesmos dados que a geraram seria circular. Ela será avaliada nas **170 tarefas novas
+isoladamente**, como réplica confirmatória, com a direção declarada aqui: espera-se que
+`critic` apresente taxa de overfit maior que `sampling`. Poder estimado nessa réplica:
+**36%** (48 programas consistentes por condição). É baixo: a réplica pode indicar se o
+efeito persiste, mas a ausência de significância nela não será evidência de ausência do
+efeito. Uma confirmação com poder adequado (~70%) exigiria o split inteiro, 400 tarefas.

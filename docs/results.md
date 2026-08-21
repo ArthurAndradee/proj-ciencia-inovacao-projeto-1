@@ -3,7 +3,13 @@
 Registro das rodadas. A definição das condições está em [strategies.md](strategies.md);
 as escolhas de desenho, em [experimental-decisions.md](experimental-decisions.md).
 
-## Rodada oficial — `gemini-3.5-flash-lite`, 100 tarefas
+## Rodada oficial — análise interina, 100 tarefas
+
+> **Estas 100 tarefas são a análise interina.** Em 20/08/2026, antes de executar a
+> extensão, a amostra foi ampliada para 270 tarefas e a **análise principal do estudo
+> passou a ser a das 270** — ver [decisão 12](experimental-decisions.md). Os números
+> abaixo são descritivos e permanecem registrados para que a decisão de estender seja
+> auditável, não como conclusão do experimento.
 
 Concluída em 20/08/2026, `run-id` `official`, commit `82b0ebd`. Reproduzir com:
 
@@ -40,8 +46,8 @@ Comparação pareada:
 | ganho líquido | +1 tarefa (+1,0 pp) |
 | **McNemar exato** | **p = 1,0000** (17 pares discordantes) |
 
-**A hipótese não se confirmou.** Sob orçamento fixo de chamadas, a revisão guiada por
-crítico-oráculo não superou a amostragem best-of-N. Nove tarefas contra oito é um empate:
+**A hipótese não se confirmou nesta análise interina.** Sob orçamento fixo de chamadas, a
+revisão guiada por crítico-oráculo não superou a amostragem best-of-N. Nove tarefas contra oito é um empate:
 com 17 discordantes, seriam necessários 13×4 para cruzar p < 0,05.
 
 A taxa de discordância observada (17%) reproduziu exatamente a do piloto, que fundamentou
@@ -88,26 +94,28 @@ exige. Em tokens, não: o crítico consumiu **60% a mais**, porque seu prompt ca
 gabarito e o histórico acumulado. Uma avaliação de custo real, em vez de contagem de
 requisições, mudaria a comparação — a limitação está declarada aqui de propósito.
 
-### Extensão possível
+### Extensão declarada — 270 tarefas
 
-Sobram 300 tarefas não utilizadas no split `evaluation`. Aumentar a amostra **não
-resolveria o resultado principal**: para detectar o efeito observado (0,529 de proporção
-discordante) com poder de 80% seriam necessárias ~13.300 tarefas.
+Declarada em 20/08/2026 **antes de executar**, com a justificativa completa e o custo
+estatístico na [decisão 12](experimental-decisions.md). Em resumo:
 
-O que uma extensão resolveria é a hipótese exploratória do overfit, que tem tamanho de
-efeito razoável (2×) e hoje corre com 24% de poder:
+- a análise principal passa a ser a das **270 tarefas**; estas 100 são interinas;
+- o objetivo é **precisão, não significância** — o efeito observado exigiria ~13.300
+  tarefas para ser detectável, o que nenhum N no split de 400 alcança. O que a extensão
+  entrega é o intervalo de confiança passando de [0,31, 0,74] para ~[0,38, 0,66];
+- **nenhuma tarefa é refeita**: verificado que a amostra de 270 contém as 100 já
+  executadas, então apenas 170 são novas (~1.970 chamadas);
+- a hipótese do overfit continua **exploratória** e será avaliada nas 170 novas
+  isoladamente, com poder de apenas 36% — indicativo, não conclusivo.
 
-| Tarefas | Consistentes por condição | Poder |
-| --- | --- | --- |
-| 100 (atual) | 28 | 24% |
-| 300 | 85 | 57% |
-| 400 (split inteiro) | 114 | 70% |
+Comando:
 
-O caminho metodologicamente correto é tratar estas 100 tarefas como **exploratórias** — foi
-onde a hipótese nasceu — e usar as 300 restantes como **réplica confirmatória
-independente**, com a hipótese declarada antes de executar. Reanalisar o conjunto ampliado
-como se fosse um único experimento seria testar uma hipótese nos mesmos dados que a
-geraram.
+```bash
+uv run arc-exp run --sample 270 --mode both --budget 7 --split evaluation \
+  --run-id official
+```
+
+Resultados a preencher ao fim.
 
 ## Achados metodológicos das rodadas de calibração
 
