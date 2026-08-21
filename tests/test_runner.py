@@ -148,3 +148,92 @@ def test_final_candidate_is_the_best_on_training_pairs() -> None:
     outcome = _solve(Condition.SAMPLING, [WRONG, partial], budget=2)
     assert outcome.final_code is not None and "len(grid[0]) == 1" in outcome.final_code
     assert outcome.solved  # the partial rule happens to fit the 1x1 test input
+
+
+# --- injection arms -------------------------------------------------------
+#
+# The doubling task fails both training pairs under WRONG, so a counterexample
+# block always has something to disclose. `client.calls[2]` is the revision
+# call: 0 is the first generation, 1 is the critique.
+
+
+def _revision_message(client: ScriptedClient) -> str:
+    """The user text the generator received on its second turn."""
+    return client.calls[2].messages[-1].text
+
+
+def test_plain_critic_discloses_no_grid() -> None:
+    _, client = _run(Condition.CRITIC, [WRONG, CRITIQUE, CORRECT])
+    message: str = _revision_message(client)
+    assert "EXPECTED OUTPUT" not in message
+    assert "TEST OUTPUT" not in message
+
+
+def test_counterexample_discloses_the_missed_training_targets() -> None:
+    _, client = _run(Condition.COUNTEREXAMPLE, [WRONG, CRITIQUE, CORRECT])
+    message: str = _revision_message(client)
+    assert "TRAINING EXAMPLE 1 — EXPECTED OUTPUT" in message
+    assert "TRAINING EXAMPLE 2 — EXPECTED OUTPUT" in message
+    # The targets themselves, as rendered grids: 1x2 "2 4" and 1x1 "6".
+    assert "1x2\n2 4" in message
+    assert "1x1\n6" in message
+
+
+def test_counterexample_withholds_the_test_target() -> None:
+    _, client = _run(Condition.COUNTEREXAMPLE, [WRONG, CRITIQUE, CORRECT])
+    message: str = _revision_message(client)
+    assert "TEST OUTPUT" not in message
+    assert "10" not in message
+
+
+def test_oracle_discloses_the_test_target() -> None:
+    _, client = _run(Condition.ORACLE, [WRONG, CRITIQUE, CORRECT])
+    message: str = _revision_message(client)
+    assert "TEST OUTPUT" in message
+    assert "1x1\n10" in message
+    # The ceiling arm is the counterexample arm plus the test pair, not instead.
+    assert "TRAINING EXAMPLE 1 — EXPECTED OUTPUT" in message
+
+
+def test_correct_training_pairs_are_not_restated() -> None:
+    """Only the misses are disclosed: the hits are already in the history."""
+    partial: str = (
+        "## RULE\nDouble single-cell grids only.\n## CODE\n```python\ndef transform(grid):\n"
+        "    return [[c * 2 for c in row] for row in grid] if len(grid[0]) == 1 else grid\n```"
+    )
+    outcome, client = _run(Condition.COUNTEREXAMPLE, [partial, CRITIQUE, CORRECT])
+    message: str = _revision_message(client)
+    assert "TRAINING EXAMPLE 1 — EXPECTED OUTPUT" in message
+    assert "TRAINING EXAMPLE 2 — EXPECTED OUTPUT" not in message
+    assert outcome.iterations[0].injected_train == 1
+
+
+def test_injection_is_recorded_per_iteration() -> None:
+    counterexample = _solve(Condition.COUNTEREXAMPLE, [WRONG, CRITIQUE, CORRECT])
+    oracle = _solve(Condition.ORACLE, [WRONG, CRITIQUE, CORRECT])
+    critic = _solve(Condition.CRITIC, [WRONG, CRITIQUE, CORRECT])
+
+    assert counterexample.iterations[0].injected_train == 2
+    assert counterexample.iterations[0].injected_test is False
+    assert oracle.iterations[0].injected_test is True
+    assert critic.iterations[0].injected_train == 0
+    assert critic.iterations[0].injected_test is False
+
+
+def test_injection_does_not_count_as_a_leak() -> None:
+    """`leak_events` stays the critic's own doing; disclosure is booked apart."""
+    outcome = _solve(Condition.ORACLE, [WRONG, CRITIQUE, CORRECT])
+    assert outcome.leak_events == 0
+
+
+def test_injection_arms_cost_the_same_as_the_critic() -> None:
+    critic = _solve(Condition.CRITIC, [WRONG, CRITIQUE] * 3, budget=6)
+    oracle = _solve(Condition.ORACLE, [WRONG, CRITIQUE] * 3, budget=6)
+    assert oracle.calls_by_role == critic.calls_by_role
+    assert len(oracle.iterations) == len(critic.iterations)
+
+
+def test_injection_arms_carry_the_conversation_forward() -> None:
+    """Like the critic arm and unlike sampling: history accumulates."""
+    _, client = _run(Condition.ORACLE, [WRONG, CRITIQUE, CORRECT])
+    assert len(client.calls[2].messages) > len(client.calls[0].messages)

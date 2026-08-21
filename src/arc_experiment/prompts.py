@@ -2,9 +2,15 @@
 
 Scope isolation is the core of the experiment and lives here:
 
-* the generator never sees the test output, in either condition;
+* the generator never sees the test output, except under the ORACLE arm, where
+  `counterexample_block` hands it over deliberately;
 * the critic sees the test output but is forbidden from proposing code or
   restating any grid (enforced downstream by `guards.sanitize`).
+
+The injection arms bypass the critic entirely: the grids they disclose are
+rendered here, from the ground truth, never asked of the model. What leaks is
+therefore exactly what was chosen, identical on every call, and `guards.sanitize`
+keeps meaning what it meant — prose the critic should not have written.
 """
 
 from __future__ import annotations
@@ -103,6 +109,37 @@ def execution_report(result: RunResult) -> str:
     return "\n".join(lines)
 
 
+def counterexample_block(task: Task, result: RunResult, *, include_test: bool) -> str:
+    """Ground-truth grids appended verbatim to the revision message.
+
+    Only the training pairs the program got wrong: the generator already holds
+    every pair in its history, so restating the ones it reproduced spends tokens
+    to say nothing. What is new here is the confrontation — the expected grid
+    next to the produced one — not the data.
+
+    With `include_test`, the target the generator is not supposed to see is
+    appended too. That is the ceiling arm, and it is stated in the prompt rather
+    than smuggled: an arm whose whole point is disclosure has nothing to hide.
+    """
+    blocks: list[str] = []
+    for index, case in enumerate(result.cases, start=1):
+        if case.correct:
+            continue
+        blocks.append(
+            f"TRAINING EXAMPLE {index} — EXPECTED OUTPUT:\n"
+            f"{grids.render(task.train[index - 1].output)}"
+        )
+    if include_test:
+        blocks.append(
+            f"TEST INPUT:\n{grids.render(task.test_pair.input)}\n"
+            f"TEST OUTPUT — the target your program must reproduce:\n"
+            f"{grids.render(task.test_pair.output)}"
+        )
+    if not blocks:
+        return ""
+    return "GROUND TRUTH FOR THE CASES YOU MISSED:\n\n" + "\n\n".join(blocks)
+
+
 def critic_request(task: Task, rule: str, result: RunResult) -> str:
     """Critic input: full ground truth (test output included) and the stated rule."""
     return (
@@ -117,13 +154,21 @@ def critic_request(task: Task, rule: str, result: RunResult) -> str:
     )
 
 
-def generator_revision(feedback: str, result: RunResult) -> str:
-    """Intervention follow-up: execution outcome plus the critic's sanitized feedback."""
+def generator_revision(feedback: str, result: RunResult, counterexample: str = "") -> str:
+    """Intervention follow-up: execution outcome plus the critic's sanitized feedback.
+
+    `counterexample` carries the disclosed ground truth of the injection arms and
+    goes last, after the critique: the critic's job is to make the generator
+    doubt its own rule, and grids placed first would let it skip straight to
+    pattern-matching them.
+    """
+    disclosure: str = f"\n\n{counterexample}" if counterexample else ""
     return (
         f"{execution_report(result)}\n\n"
         "An independent validator, which can see the ground truth you cannot, "
         "reviewed the rule you stated and reported:\n\n"
-        f"{feedback}\n\n"
+        f"{feedback}"
+        f"{disclosure}\n\n"
         "The validator gives no solutions and may be partially wrong. Use it to "
         "find the flaw in your own reasoning, restate the rule and rewrite the "
         f"program. Answer again with both sections ({RULE_HEADER} and {CODE_HEADER})."

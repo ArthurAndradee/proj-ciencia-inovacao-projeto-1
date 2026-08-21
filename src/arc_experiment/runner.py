@@ -1,14 +1,19 @@
-"""The two experimental conditions and the per-task solving loop.
+"""The experimental conditions and the per-task solving loop.
 
-Both spend the same fixed budget of API calls; what differs is how:
+Every condition spends the same fixed budget of API calls; what differs is how:
 
-* SAMPLING — N independent candidates, no feedback, no history (diversify);
-* CRITIC   — generator revised by an oracle critic, which spends from the
-  SAME budget, so each revision round costs two calls (iterate).
+* SAMPLING       — N independent candidates, no feedback, no history (diversify);
+* CRITIC         — generator revised by an oracle critic, which spends from the
+  SAME budget, so each revision round costs two calls (iterate);
+* COUNTEREXAMPLE — CRITIC plus the ground-truth grids of the training pairs the
+  program got wrong, appended verbatim to the critique;
+* ORACLE         — COUNTEREXAMPLE plus the test-pair target. The generator can
+  then hardcode the answer, so this arm measures a CEILING, not a strategy: its
+  accuracy is not comparable to the others.
 
-The stopping criterion is identical in both: a candidate is accepted when it
-reproduces every training pair. The test-pair ground truth is visible to the
-critic only, and never selects the answer.
+The stopping criterion is identical in all of them: a candidate is accepted when
+it reproduces every training pair. The test-pair ground truth never selects the
+answer — under ORACLE it reaches the generator, but only through the prompt.
 """
 
 from __future__ import annotations
@@ -32,6 +37,23 @@ NO_CODE_FEEDBACK = (
 class Condition(str, Enum):
     SAMPLING = "sampling"
     CRITIC = "critic"
+    COUNTEREXAMPLE = "counterexample"
+    ORACLE = "oracle"
+
+    @property
+    def revises(self) -> bool:
+        """Every condition but sampling revises one conversation with feedback."""
+        return self is not Condition.SAMPLING
+
+    @property
+    def injects_train(self) -> bool:
+        """Failing training pairs come back with the expected grid attached."""
+        return self in (Condition.COUNTEREXAMPLE, Condition.ORACLE)
+
+    @property
+    def injects_test(self) -> bool:
+        """The test-pair ground truth reaches the generator: an oracle ceiling."""
+        return self is Condition.ORACLE
 
 
 class StopReason(str, Enum):
@@ -56,6 +78,11 @@ class IterationRecord:
     output_tokens: int = 0
     thinking_tokens: int = 0
     truncated: bool = False
+    # What the injection arms handed over, kept apart from `leak_violations`:
+    # that field means the critic's prose had to be redacted, this one means we
+    # disclosed on purpose. Merging them would make both unreadable.
+    injected_train: int = 0
+    injected_test: bool = False
 
 
 @dataclass
@@ -121,7 +148,7 @@ def solve_task(
 ) -> TaskOutcome:
     """Run one task under one condition within a fixed API-call budget."""
     budget = Budget(limit=budget_calls)
-    sampling: bool = condition is Condition.SAMPLING
+    sampling: bool = not condition.revises
     generator = Generator(
         client=client, model=generator_model, budget=budget, temperature=temperature
     )
@@ -205,7 +232,18 @@ def solve_task(
             record.input_tokens += critique.input_tokens
             record.output_tokens += critique.output_tokens
             record.thinking_tokens += critique.thinking_tokens
-            message = prompts.generator_revision(critique.feedback, result)
+            counterexample: str = ""
+            if condition.injects_train:
+                counterexample = prompts.counterexample_block(
+                    task, result, include_test=condition.injects_test
+                )
+                record.injected_train = sum(
+                    1 for case in result.cases if not case.correct
+                )
+                record.injected_test = condition.injects_test
+            message = prompts.generator_revision(
+                critique.feedback, result, counterexample=counterexample
+            )
     except BudgetExceeded:
         stop_reason = StopReason.BUDGET_EXHAUSTED
     except RuntimeError as exc:  # API failure after retries: keep the run alive
