@@ -5,11 +5,11 @@ as escolhas de desenho, em [experimental-decisions.md](experimental-decisions.md
 
 ## Rodada oficial — `gemini-3.5-flash-lite`, 100 tarefas
 
-Em execução, `run-id` `official`. Reproduzir ou continuar com:
+Concluída em 20/08/2026, `run-id` `official`, commit `82b0ebd`. Reproduzir com:
 
 ```bash
 uv run arc-exp run --sample 100 --mode both --budget 7 --split evaluation \
-  --workers 3 --run-id official
+  --run-id official
 ```
 
 | Parâmetro | Valor |
@@ -19,11 +19,95 @@ uv run arc-exp run --sample 100 --mode both --budget 7 --split evaluation \
 | Tarefas | 100 |
 | `BUDGET_CALLS` | 7 (ímpar, ver decisão 6) |
 | Temperatura | 0,8 (`sampling`) / 0,2 (`critic`) |
+| Chaves | 6 em paralelo, ~165 chamadas cada |
+| Tempo de execução | 13 minutos |
 
-A cota do free tier (500 requisições/dia por modelo) não comporta as ~1.200 chamadas da
-rodada, então ela avança ao longo de alguns dias. Como as duas condições de cada tarefa
-rodam juntas, cada interrupção deixa **pares completos**, utilizáveis pela comparação
-pareada. Resultados a preencher ao fim.
+### Resultado
+
+| Condição | Resolvidas | Acurácia | Consist. treino | Chamadas médias | Iterações médias |
+| --- | --- | --- | --- | --- | --- |
+| `sampling` | 25/100 | 25,0% | 27,0% | 5,78 | 5,78 |
+| `critic` | 26/100 | 26,0% | 30,0% | 5,84 | 3,42 |
+
+Comparação pareada:
+
+| | |
+| --- | --- |
+| resolvidas por ambas | 17 |
+| só `sampling` | 8 |
+| só `critic` | 9 |
+| por nenhuma | 66 |
+| ganho líquido | +1 tarefa (+1,0 pp) |
+| **McNemar exato** | **p = 1,0000** (17 pares discordantes) |
+
+**A hipótese não se confirmou.** Sob orçamento fixo de chamadas, a revisão guiada por
+crítico-oráculo não superou a amostragem best-of-N. Nove tarefas contra oito é um empate:
+com 17 discordantes, seriam necessários 13×4 para cruzar p < 0,05.
+
+A taxa de discordância observada (17%) reproduziu exatamente a do piloto, que fundamentou
+a escolha de 100 tarefas na decisão 9. O que não se materializou foi o desequilíbrio entre
+as discordâncias — não o número delas.
+
+O intervalo de confiança de 95% para a proporção de discordâncias a favor do crítico é
+**[0,31, 0,74]**, largamente compatível com o empate (0,50).
+
+### O crítico melhora o treino sem melhorar o teste
+
+O resultado nulo na acurácia esconde um efeito de mecanismo:
+
+| | consistentes com treino | dessas, acertaram o teste | overfit |
+| --- | --- | --- | --- |
+| `sampling` | 27 | 24 | 3 (11,1%) |
+| `critic` | 30 | 23 | 7 (23,3%) |
+
+O crítico **faz o que promete**: produziu mais programas consistentes com todo o conjunto
+de treino (30 contra 27). Mas converteu essa consistência em acerto no teste com bem menos
+eficiência — 77% contra 89%. A revisão guiada ajusta ao treino sem generalizar melhor, e é
+por isso que +3 pp de consistência viraram apenas +1 pp de acurácia.
+
+É a leitura mais interessante da rodada, e também a mais frágil: **nenhuma das duas
+diferenças é significativa** com 100 tarefas.
+
+| Hipótese | Teste | p |
+| --- | --- | --- |
+| crítico produz mais overfit (11% vs 23%) | Fisher exato | 0,3044 |
+| crítico produz mais consistência de treino | McNemar pareado (8×5) | 0,5811 |
+
+Ambas são **hipóteses exploratórias geradas por estes dados**, não hipóteses testadas.
+Confirmá-las exige uma réplica em tarefas não utilizadas — ver a seção de extensão abaixo.
+
+### Custo: as condições empataram em chamadas, não em tokens
+
+| | chamadas | tokens | respostas truncadas |
+| --- | --- | --- | --- |
+| `sampling` | 578 | 3.131k | 5 |
+| `critic` | 584 | 5.014k | 0 |
+
+O orçamento controlado é o de **chamadas**, e nele as condições empataram como o desenho
+exige. Em tokens, não: o crítico consumiu **60% a mais**, porque seu prompt carrega o
+gabarito e o histórico acumulado. Uma avaliação de custo real, em vez de contagem de
+requisições, mudaria a comparação — a limitação está declarada aqui de propósito.
+
+### Extensão possível
+
+Sobram 300 tarefas não utilizadas no split `evaluation`. Aumentar a amostra **não
+resolveria o resultado principal**: para detectar o efeito observado (0,529 de proporção
+discordante) com poder de 80% seriam necessárias ~13.300 tarefas.
+
+O que uma extensão resolveria é a hipótese exploratória do overfit, que tem tamanho de
+efeito razoável (2×) e hoje corre com 24% de poder:
+
+| Tarefas | Consistentes por condição | Poder |
+| --- | --- | --- |
+| 100 (atual) | 28 | 24% |
+| 300 | 85 | 57% |
+| 400 (split inteiro) | 114 | 70% |
+
+O caminho metodologicamente correto é tratar estas 100 tarefas como **exploratórias** — foi
+onde a hipótese nasceu — e usar as 300 restantes como **réplica confirmatória
+independente**, com a hipótese declarada antes de executar. Reanalisar o conjunto ampliado
+como se fosse um único experimento seria testar uma hipótese nos mesmos dados que a
+geraram.
 
 ## Achados metodológicos das rodadas de calibração
 
