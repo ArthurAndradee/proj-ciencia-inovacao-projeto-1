@@ -161,3 +161,24 @@ def test_full_report_includes_comparison_only_for_two_conditions() -> None:
 
 def test_full_report_without_records() -> None:
     assert report.full_report({"sampling": [], "critic": []}) == "No results recorded."
+
+
+def test_progress_line_shows_the_candidate_that_was_tested() -> None:
+    """Regression: a solved task printed `train 0/3` from the last iteration.
+
+    Selection is by train_correct, so the best iteration is the one whose code
+    ran against the test pair. Printing the last one contradicted `solved`.
+    """
+
+    def record(index: int, correct: int) -> IterationRecord:
+        return IterationRecord(
+            index=index, rule="r", code="c", executed=True, exec_error=None,
+            train_correct=correct, train_total=3,
+        )
+
+    solved = outcome(solved=True)
+    solved.iterations = [record(1, 0), record(2, 0), record(3, 1), record(4, 0)]
+
+    line: str = report.progress_line(solved, index=52, total=172)
+    assert "train 1/3" in line  # the selected candidate, not the last
+    assert "solved" in line

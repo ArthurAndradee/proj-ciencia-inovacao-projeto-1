@@ -19,7 +19,7 @@ from typing import Any
 from . import report
 from .config import Config
 from .dataset import Task, find_task, sample_tasks
-from .experiment import run_experiment, run_id_for
+from .experiment import pending_work, run_experiment, run_id_for
 from .keypool import PooledClient
 from .llm import LLMClient, ScriptedClient
 from .metrics import load_outcomes
@@ -236,7 +236,9 @@ def command_run(args: argparse.Namespace) -> int:
         for condition in conditions:
             (run_dir / f"{condition.value}.jsonl").unlink(missing_ok=True)
 
-    total: int = len(tasks) * len(conditions)
+    # What this invocation will actually run: on a resume the finished tasks
+    # are skipped, so counting them would make a complete run end short.
+    total: int = pending_work(run_dir, tasks, conditions)
     workers: int = resolve_workers(args, config)
     state: dict[str, int] = {"done": 0}
 

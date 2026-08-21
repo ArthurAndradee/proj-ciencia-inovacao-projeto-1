@@ -252,3 +252,21 @@ def test_a_key_running_dry_mid_run_does_not_end_the_run(tmp_path: Path) -> None:
     usage = {entry["key"]: entry for entry in pool.usage()}
     assert "gen" in usage["key1"]["exhausted"]  # the dead key was retired
     assert usage["key2"]["calls"] > 0  # and the survivor took over
+
+
+def test_pending_work_counts_only_what_a_resume_still_owes(tmp_path: Path) -> None:
+    """Regression: the counter read `tasks x conditions` and ended at 172/200."""
+    from arc_experiment.experiment import pending_work
+
+    config = make_config(tmp_path)
+    run_dir: Path = config.results_dir / "runs" / "resume"
+    run_dir.mkdir(parents=True)
+
+    assert pending_work(run_dir, TASKS, PAIRED) == 4  # 2 tasks x 2 conditions
+
+    run_experiment(
+        config, ScriptedClient(default=CORRECT), conditions=[Condition.SAMPLING],
+        tasks=TASKS[:1], run_id="resume",
+    )
+    # One task now owes only the critic condition; the other still owes both.
+    assert pending_work(run_dir, TASKS, PAIRED) == 3

@@ -79,6 +79,32 @@ def completed_task_ids(path: Path) -> set[str]:
     return done
 
 
+def completed_by_condition(
+    run_dir: Path, conditions: Iterable[Condition]
+) -> dict[Condition, set[str]]:
+    """Task ids already recorded, per condition."""
+    return {
+        condition: completed_task_ids(run_dir / f"{condition.value}.jsonl")
+        for condition in conditions
+    }
+
+
+def pending_work(
+    run_dir: Path, tasks: Sequence[Task], conditions: Iterable[Condition]
+) -> int:
+    """How many (task, condition) results a run still owes.
+
+    The progress counter needs this rather than `tasks x conditions`: on a
+    resume most of that product is already on disk, and counting it would show
+    a run finishing at 172/200 having done every one of the 100 tasks.
+    """
+    ordered = tuple(conditions)
+    done = completed_by_condition(run_dir, ordered)
+    return sum(
+        1 for task in tasks for c in ordered if task.task_id not in done[c]
+    )
+
+
 def append_outcome(path: Path, outcome: TaskOutcome) -> None:
     with path.open("a") as handle:
         handle.write(json.dumps(outcome.to_dict(), ensure_ascii=False) + "\n")
@@ -115,9 +141,7 @@ def run_experiment(
 
     ordered: tuple[Condition, ...] = tuple(conditions)
     paths: dict[Condition, Path] = {c: run_dir / f"{c.value}.jsonl" for c in ordered}
-    done: dict[Condition, set[str]] = {
-        c: completed_task_ids(path) for c, path in paths.items()
-    }
+    done: dict[Condition, set[str]] = completed_by_condition(run_dir, ordered)
 
     def solve_every_condition(task: Task) -> list[TaskOutcome]:
         """One task under every condition it still owes.

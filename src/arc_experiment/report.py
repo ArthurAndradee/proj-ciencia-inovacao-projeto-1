@@ -39,8 +39,12 @@ def progress_line(outcome: TaskOutcome, index: int, total: int) -> str:
     status: str = f"{_mark(outcome.solved)} {'solved' if outcome.solved else 'failed'}"
     train: str = ""
     if outcome.iterations:
-        last = outcome.iterations[-1]
-        train = f"  train {last.train_correct}/{last.train_total}"
+        # The candidate that was actually run against the test pair is the best
+        # one, not the last: `_better` selects on train_correct, so the maximum
+        # is what `solved` was decided from. Showing the last iteration made a
+        # solved task read "train 0/3" when the selected candidate scored 1/3.
+        best = max(outcome.iterations, key=lambda record: record.train_correct)
+        train = f"  train {best.train_correct}/{best.train_total}"
     roles: str = " ".join(f"{role[:3]}={n}" for role, n in sorted(outcome.calls_by_role.items()))
     suffix: str = f"  [{outcome.error}]" if outcome.error else ""
     return (
