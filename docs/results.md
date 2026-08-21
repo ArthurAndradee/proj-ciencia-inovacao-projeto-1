@@ -1,6 +1,6 @@
 # Resultados — rodada oficial
 
-**270 tarefas do ARC-AGI-1 · `gemini-3.5-flash-lite` · 21/08/2026 · commit `e58ac77`**
+**270 tarefas do ARC-AGI-1 · `gemini-3.5-flash-lite` · 21/08/2026 · commit `5fdda8d`**
 
 > **A hipótese não se confirmou.** Sob orçamento fixo de chamadas, a revisão guiada por
 > crítico-oráculo **não** superou a amostragem best-of-N: −0,7 pp, **p = 0,8877**
