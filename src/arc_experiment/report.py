@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from itertools import combinations
 from typing import Any
 
 from .metrics import ConditionSummary, PairedComparison, compare, summarize
@@ -157,14 +158,18 @@ def full_report(
         summary_table([summarize(records_by_condition[label], label) for label in labels])
     )
 
-    if len(labels) == 2:
+    # Every pair, not just the first two: with more than two arms the question
+    # is no longer "which of the two", and picking one pair to print would be
+    # choosing the answer. `compare` intersects on task id, so arms that ran
+    # different numbers of tasks still pair over what they share.
+    for label_a, label_b in combinations(labels, 2):
         blocks.append(
             comparison_block(
                 compare(
-                    records_by_condition[labels[0]],
-                    records_by_condition[labels[1]],
-                    labels[0],
-                    labels[1],
+                    records_by_condition[label_a],
+                    records_by_condition[label_b],
+                    label_a,
+                    label_b,
                 )
             )
         )

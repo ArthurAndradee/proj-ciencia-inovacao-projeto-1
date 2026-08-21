@@ -27,7 +27,16 @@ def parse(argv: list[str]) -> argparse.Namespace:
 def test_modes_map_to_conditions() -> None:
     assert cli.MODES["sampling"] == (Condition.SAMPLING,)
     assert cli.MODES["critic"] == (Condition.CRITIC,)
+    assert cli.MODES["counterexample"] == (Condition.COUNTEREXAMPLE,)
+    assert cli.MODES["oracle"] == (Condition.ORACLE,)
     assert cli.MODES["both"] == (Condition.SAMPLING, Condition.CRITIC)
+
+
+def test_every_condition_is_reachable_from_the_cli() -> None:
+    """A condition with no mode cannot be run, and would be dead code."""
+    reachable = {c for conditions in cli.MODES.values() for c in conditions}
+    assert reachable == set(Condition)
+    assert cli.MODES["all"] == tuple(Condition)
 
 
 def test_pacing_note_reports_the_throttled_wall_time(monkeypatch: pytest.MonkeyPatch) -> None:

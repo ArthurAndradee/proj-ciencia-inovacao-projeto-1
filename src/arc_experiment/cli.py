@@ -29,7 +29,10 @@ from .runner import Condition, TaskOutcome
 MODES: dict[str, tuple[Condition, ...]] = {
     "sampling": (Condition.SAMPLING,),
     "critic": (Condition.CRITIC,),
+    "counterexample": (Condition.COUNTEREXAMPLE,),
+    "oracle": (Condition.ORACLE,),
     "both": (Condition.SAMPLING, Condition.CRITIC),
+    "all": tuple(Condition),
 }
 
 DRY_RUN_ANSWER: str = (
@@ -64,7 +67,9 @@ def build_parser() -> argparse.ArgumentParser:
         choices=sorted(MODES),
         default="both",
         help="sampling = best-of-N only, critic = oracle critic only, "
-        "both = the paired comparison",
+        "counterexample = critic plus the missed training targets, "
+        "oracle = counterexample plus the test target (a ceiling, not a "
+        "strategy), both = the paired comparison, all = every arm",
     )
     run.add_argument("--split", choices=("training", "evaluation"))
     run.add_argument("--seed", type=int)
@@ -250,7 +255,7 @@ def command_run(args: argparse.Namespace) -> int:
     if not args.quiet:
         models: str = config.generator_model + (
             f" / {config.critic_model}"
-            if Condition.CRITIC in conditions
+            if any(condition.revises for condition in conditions)
             and config.critic_model != config.generator_model
             else ""
         )

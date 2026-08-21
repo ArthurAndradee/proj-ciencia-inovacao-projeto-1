@@ -146,17 +146,41 @@ def test_task_table_truncates_long_runs() -> None:
     assert "60 more task(s) omitted" in table
 
 
-def test_full_report_includes_comparison_only_for_two_conditions() -> None:
+def test_full_report_compares_every_pair_of_conditions() -> None:
     both: str = report.full_report(
         {
             "sampling": [record("a", "sampling", True)],
             "critic": [record("a", "critic", False)],
         }
     )
-    assert "Paired comparison" in both
+    assert both.count("Paired comparison") == 1
 
     single: str = report.full_report({"sampling": [record("a", "sampling", True)]})
     assert "Paired comparison" not in single
+
+    # Three arms are three pairs: printing only the first would be choosing
+    # which comparison the reader gets to see.
+    three: str = report.full_report(
+        {
+            "sampling": [record("a", "sampling", True)],
+            "critic": [record("a", "critic", False)],
+            "oracle": [record("a", "oracle", True)],
+        }
+    )
+    assert three.count("Paired comparison") == 3
+    for pair in ("sampling only", "critic only", "oracle only"):
+        assert pair in three
+
+
+def test_full_report_pairs_arms_that_ran_different_task_counts() -> None:
+    """A pilot arm covers fewer tasks; it must still pair over the overlap."""
+    text: str = report.full_report(
+        {
+            "sampling": [record("a", "sampling", True), record("b", "sampling", False)],
+            "oracle": [record("a", "oracle", False)],
+        }
+    )
+    assert "Paired comparison over 1 task(s)" in text
 
 
 def test_full_report_without_records() -> None:
