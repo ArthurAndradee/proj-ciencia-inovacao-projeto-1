@@ -29,9 +29,8 @@ inicial: o modelo não sabe que já tentou antes, não vê o resultado da execu�
 recebe crítica. No fim, entre os candidatos gerados, vence o que reproduz mais pares
 de treino.
 
-É a estratégia que a literatura de síntese de programa chama de *amostragem com
-verificador*, e é um baseline forte — não um espantalho. Se ela vencer, a conclusão é
-que o orçamento rende mais em diversidade do que em correção guiada.
+Se ela vencer, a conclusão é que o orçamento rende mais em diversidade do que em
+correção guiada.
 
 ### `critic` — revisão guiada por oráculo
 

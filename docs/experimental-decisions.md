@@ -13,9 +13,8 @@ treino.
 
 **Por quê.** O orçamento controla **chamadas à API**, não programas. Nada obriga quem
 recebe N chamadas a gastá-las revisando um único programa em série — pode gastá-las
-gerando N candidatos independentes e ficando com o melhor. Amostragem com verificador é
-uma estratégia reconhecidamente forte em síntese de programa, e medir a intervenção
-contra uma alternativa mais fraca produziria uma vantagem que diz mais sobre o
+gerando N candidatos independentes e ficando com o melhor. Medir a intervenção contra
+uma alternativa que gasta o orçamento pior produziria uma vantagem que diz mais sobre o
 comparativo escolhido do que sobre o método.
 
 A escolha também muda a pergunta para melhor. Contra uma revisão sem oráculo, o
