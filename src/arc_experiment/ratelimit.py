@@ -75,6 +75,27 @@ def quota_exhaustion_reason(exc: BaseException) -> str | None:
     return "the API kept refusing with 429 (rate limited)"
 
 
+_KEY_FAULT = re.compile(
+    r"API_KEY_INVALID|API key not valid|UNAUTHENTICATED|PERMISSION_DENIED"
+    r"|ACCESS_TOKEN_TYPE_UNSUPPORTED|invalid authentication credentials",
+    re.IGNORECASE,
+)
+
+
+def is_key_fault(exc: BaseException) -> bool:
+    """True when the credential is the problem, not the request.
+
+    The distinction decides who dies. A malformed prompt fails identically on
+    every key, so it must abort the run; a rejected credential is one key's
+    problem and the others are unaffected. Conflating them cost a run: one bad
+    key answered 401, the error propagated, and all seven workers died together
+    without finishing a single task.
+    """
+    if status_code(exc) in (401, 403):
+        return True
+    return bool(_KEY_FAULT.search(str(exc)))
+
+
 def is_retryable(exc: BaseException) -> bool:
     code: int | None = status_code(exc)
     if code is None:

@@ -1,0 +1,65 @@
+[
+  {
+    "key": "key1",
+    "calls": 259,
+    "failures": 0,
+    "rejected": false,
+    "exhausted": []
+  },
+  {
+    "key": "key2",
+    "calls": 259,
+    "failures": 0,
+    "rejected": false,
+    "exhausted": []
+  },
+  {
+    "key": "key3",
+    "calls": 259,
+    "failures": 0,
+    "rejected": false,
+    "exhausted": []
+  },
+  {
+    "key": "key4",
+    "calls": 0,
+    "failures": 1,
+    "rejected": true,
+    "exhausted": []
+  },
+  {
+    "key": "key5",
+    "calls": 259,
+    "failures": 0,
+    "rejected": false,
+    "exhausted": []
+  },
+  {
+    "key": "key6",
+    "calls": 259,
+    "failures": 0,
+    "rejected": false,
+    "exhausted": []
+  },
+  {
+    "key": "key7",
+    "calls": 0,
+    "failures": 1,
+    "rejected": true,
+    "exhausted": []
+  },
+  {
+    "key": "key8",
+    "calls": 259,
+    "failures": 0,
+    "rejected": false,
+    "exhausted": []
+  },
+  {
+    "key": "key9",
+    "calls": 258,
+    "failures": 0,
+    "rejected": false,
+    "exhausted": []
+  }
+]

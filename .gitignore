@@ -6,8 +6,12 @@ venv/
 .pytest_cache/
 .DS_Store
 
-# Execucoes brutas nao vao para o repositorio; os agregados sim.
-results/runs/
+# Execucoes brutas nao vao para o repositorio, com uma excecao: a rodada oficial,
+# cujos JSONL sao a evidencia da nota tecnica. O modelo nao e deterministico, entao
+# esses arquivos nao podem ser regerados identicos -- sao insubstituiveis, nao
+# reproduziveis.
+results/runs/*
+!results/runs/official/
 !results/.gitkeep
 
 results/gemma-run.log
