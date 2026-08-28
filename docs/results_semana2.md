@@ -2,15 +2,15 @@
 # Relatório Semanal - Semana 2
 
 ## 📌 Resumo
-Nesta semana, as principais entregas envolveram a correção de um bug crítico no oráculo, a implementação de novos críticos e a execução de experimentos de calibração (30 tarefas) e avaliação (60 tarefas)[cite: 1]. Os resultados confirmaram que as variações de desempenho observadas até agora não são estatisticamente significativas, indicando ruído estatístico de amostra pequena[cite: 1].
+Nesta semana, as principais entregas envolveram a correção de um bug crítico no oráculo, a implementação de novos críticos e a execução de experimentos de calibração (30 tarefas) e avaliação (60 tarefas). Os resultados confirmaram que as variações de desempenho observadas até agora não são estatisticamente significativas, indicando ruído estatístico de amostra pequena.
 
 ## ✅ Atividades Concluídas
 
 ### Implementações e Correções
-* O bug no `crítico-oráculo` foi corrigido, garantindo que a função `critic_request` agora receba o código candidato corretamente, não apenas a regra em linguagem natural[cite: 1].
-* Foram implementados dois novos críticos de forma paralela (sem duplicar o loop de controle): `critic_no_oracle` (sem acesso ao gabarito) e `critic_cegis` (com acesso ao gabarito e respostas em vocabulário fechado com contraexemplo)[cite: 1].
-* Identificado e corrigido um bug de *encoding* que quebrava a leitura/escrita de arquivos no Windows; a correção foi aplicada em 6 arquivos e coberta com um teste de regressão[cite: 1].
-* A CLI foi atualizada para suportar os novos parâmetros (`--mode critic-no-oracle`, `--mode critic-cegis`, `--mode all`)[cite: 1].
+* O bug no `crítico-oráculo` foi corrigido, garantindo que a função `critic_request` agora receba o código candidato corretamente, não apenas a regra em linguagem natural.
+* Foram implementados dois novos críticos de forma paralela (sem duplicar o loop de controle): `critic_no_oracle` (sem acesso ao gabarito) e `critic_cegis` (com acesso ao gabarito e respostas em vocabulário fechado com contraexemplo).
+* Identificado e corrigido um bug de *encoding* que quebrava a leitura/escrita de arquivos no Windows; a correção foi aplicada em 6 arquivos e coberta com um teste de regressão.
+* A CLI foi atualizada para suportar os novos parâmetros (`--mode critic-no-oracle`, `--mode critic-cegis`, `--mode all`).
 
 ### As quatro condições comparadas
 
@@ -26,7 +26,7 @@ Todas competem sob o **mesmo orçamento de chamadas de API por tarefa**.
 Por isso `critic*` produz menos programas que `sampling` com o mesmo orçamento — cada rodada de crítica "come" uma chamada que `sampling` teria usado gerando mais uma tentativa.
 
 ## 📊 Experimentos e Resultados
-Foram executadas duas rodadas experimentais: Calibração (30 tarefas, 4 condições) e Oficial (60 tarefas, 4 condições)[cite: 1]. Na rodada Oficial, a condição de `sampling` não precisou ser re-executada, pois foi reaproveitada das tarefas da rodada anterior[cite: 1].
+Foram executadas duas rodadas experimentais: Calibração (30 tarefas, 4 condições) e Oficial (60 tarefas, 4 condições). Na rodada Oficial, a condição de `sampling` não precisou ser re-executada, pois foi reaproveitada das tarefas da rodada anterior.
 
 ### Resultado da calibração (30 tarefas — único conjunto completo)
 
@@ -37,9 +37,9 @@ Foram executadas duas rodadas experimentais: Calibração (30 tarefas, 4 condiç
 | critic_no_oracle   | 8/30       | 26,7%    | 33,3%           |
 | critic_cegis       | 6/30       | 20,0%    | 26,7%           |
 
-Durante a execução de 60 tarefas, o progresso foi interrompido duas vezes por esgotamento de cota da API, e foi constatado que 3 das 9 chaves configuradas apresentavam erro 401 permanente[cite: 1]. O problema foi contornado retomando o pipeline em múltiplas tentativas[cite: 1].
+Durante a execução de 60 tarefas, o progresso foi interrompido duas vezes por esgotamento de cota da API, e foi constatado que 3 das 9 chaves configuradas apresentavam erro 401 permanente. O problema foi contornado retomando o pipeline em múltiplas tentativas.
 
-**Resultados da Rodada Oficial (60 tarefas):**[cite: 1]
+**Resultados da Rodada Oficial (60 tarefas):**
 
 | Condição           | Acurácia | vs sampling (McNemar p) |
 | :----------------- | :------- | :---------------------- |
@@ -48,10 +48,9 @@ Durante a execução de 60 tarefas, o progresso foi interrompido duas vezes por 
 | critic_no_oracle   | 28,3%    | 0,7539                  |
 | critic_cegis       | 26,7%    | 0,4531                  |
 
-*Análise Estatística:* Nenhuma das cinco comparações pré-registradas apresentou relevância estatística sob a correção de Bonferroni (α=0,01)[cite: 1]. A inversão dos resultados frente à rodada de calibração reforça que a diferença captada é ruído, consistente com o resultado nulo da rodada original de 270 tarefas[cite: 1].
+*Análise Estatística:* Nenhuma das cinco comparações pré-registradas apresentou relevância estatística sob a correção de Bonferroni (α=0,01). A inversão dos resultados frente à rodada de calibração reforça que a diferença captada é ruído, consistente com o resultado nulo da rodada original de 270 tarefas.
 
 ## 🚧 Próximos Passos e Pendências
-* Avaliar o tempo e o custo de estender o experimento para as 270 tarefas completas[cite: 1].
-* Verificar e solucionar as credenciais das 3 chaves de API com erro 401 no Google Cloud Console[cite: 1].
+* Avaliar o tempo e o custo de estender o experimento para as 270 tarefas completas.
 
 
