@@ -124,6 +124,17 @@ folga disponível. Leitura **interina**, não final:
 * Avaliar o tempo e o custo de estender o experimento para as 270 tarefas completas.
 
 
+**As 5 comparações pré-registradas**, com correção de Bonferroni (α = 0,05 / 5 = 0,01,
+porque são 5 testes simultâneos sobre o mesmo conjunto de dados):
+
+| Par | Discordantes | McNemar (p) | Significativo a α=0,01? |
+|---|---|---|---|
+| `sampling` vs `critic` | 6 (1×5) | 0,2188 | não |
+| `sampling` vs `critic_no_oracle` | 10 (6×4) | 0,7539 | não |
+| `sampling` vs `critic_cegis` | 7 (5×2) | 0,4531 | não |
+| `critic` vs `critic_no_oracle` | 10 (8×2) | 0,1094 | não |
+| `critic` vs `critic_cegis` | 9 (8×1) | **0,0391** | não (não sobrevive à correção) |
+
 ### Casos práticos
 ### Tarefa `070dd51e` — o mecanismo funcionando (e um limite do CEGIS)
 
