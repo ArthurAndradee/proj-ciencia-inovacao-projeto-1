@@ -9,8 +9,6 @@ Nesta semana, as principais entregas envolveram a correção de um bug crítico 
 ### Implementações e Correções
 * O bug no `crítico-oráculo` foi corrigido, garantindo que a função `critic_request` agora receba o código candidato corretamente, não apenas a regra em linguagem natural.
 * Foram implementados dois novos críticos de forma paralela (sem duplicar o loop de controle): `critic_no_oracle` (sem acesso ao gabarito) e `critic_cegis` (com acesso ao gabarito e respostas em vocabulário fechado com contraexemplo).
-* Identificado e corrigido um bug de *encoding* que quebrava a leitura/escrita de arquivos no Windows; a correção foi aplicada em 6 arquivos e coberta com um teste de regressão.
-* A CLI foi atualizada para suportar os novos parâmetros (`--mode critic-no-oracle`, `--mode critic-cegis`, `--mode all`).
 
 ### As quatro condições comparadas
 
