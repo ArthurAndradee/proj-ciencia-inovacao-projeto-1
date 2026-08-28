@@ -159,7 +159,12 @@ def test_manifest_records_the_key_count_but_never_the_keys(tmp_path: Path) -> No
     # How many quotas the run could draw on explains its pace and where it stopped.
     assert manifest["config"]["key_count"] == 2
     assert manifest["task_ids"] == ["t1", "t2"]
-    assert set(manifest["prompt_digest"]) == {"generator_system", "critic_system"}
+    assert set(manifest["prompt_digest"]) == {
+        "generator_system",
+        "critic_system",
+        "critic_no_oracle_system",
+        "critic_cegis_system",
+    }
 
 
 def test_completed_tasks_are_skipped_on_resume(tmp_path: Path) -> None:
@@ -175,6 +180,33 @@ def test_completed_tasks_are_skipped_on_resume(tmp_path: Path) -> None:
 
     assert calls_after_first_run == 2
     assert second_client.calls == []  # nothing re-run, nothing re-paid
+    assert completed_task_ids(run_dir / "sampling.jsonl") == {"t1", "t2"}
+
+
+def test_resuming_a_run_with_non_ascii_output_does_not_crash(tmp_path: Path) -> None:
+    """Regression: JSONL files must be read/written as UTF-8, not the platform
+
+    default (cp1252 on Windows). A run whose model output contains characters
+    outside cp1252 (em dashes, curly quotes — routine in real Gemini answers)
+    used to crash on resume with `UnicodeDecodeError`, before any task ran.
+    """
+    non_ascii_answer: str = (
+        "## RULE\nCopy the grid — nothing else. “Simple”.\n## CODE\n"
+        "```python\ndef transform(grid):\n    return grid\n```"
+    )
+    config = make_config(tmp_path)
+    run_dir: Path = run_experiment(
+        config,
+        ScriptedClient(default=non_ascii_answer),
+        conditions=[Condition.SAMPLING],
+        tasks=TASKS,
+    )
+    assert "—" in (run_dir / "sampling.jsonl").read_text(encoding="utf-8")
+
+    # The resumed run must be able to read that file back without crashing.
+    second_client = ScriptedClient(default=non_ascii_answer)
+    run_experiment(config, second_client, conditions=[Condition.SAMPLING], tasks=TASKS)
+    assert second_client.calls == []  # everything was already recorded
     assert completed_task_ids(run_dir / "sampling.jsonl") == {"t1", "t2"}
 
 

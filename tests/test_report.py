@@ -163,6 +163,32 @@ def test_full_report_without_records() -> None:
     assert report.full_report({"sampling": [], "critic": []}) == "No results recorded."
 
 
+def test_full_report_uses_explicit_comparison_pairs_when_given() -> None:
+    records = {
+        "sampling": [record("a", "sampling", True)],
+        "critic": [record("a", "critic", False)],
+        "critic_no_oracle": [record("a", "critic_no_oracle", True)],
+        "critic_cegis": [record("a", "critic_cegis", False)],
+    }
+    text: str = report.full_report(records, comparison_pairs=report.PRIMARY_COMPARISONS)
+    assert text.count("Paired comparison") == len(report.PRIMARY_COMPARISONS)
+    for label_a, label_b in report.PRIMARY_COMPARISONS:
+        assert f"{label_a} only" in text and f"{label_b} only" in text
+
+
+def test_full_report_skips_pairs_missing_data() -> None:
+    records = {
+        "sampling": [record("a", "sampling", True)],
+        "critic": [record("a", "critic", False)],
+        "critic_no_oracle": [],
+        "critic_cegis": [],
+    }
+    text: str = report.full_report(records, comparison_pairs=report.PRIMARY_COMPARISONS)
+    # Only "sampling vs critic" has data on both sides; the other four pairs are skipped.
+    assert text.count("Paired comparison") == 1
+    assert "sampling only" in text and "critic only" in text
+
+
 def test_progress_line_shows_the_candidate_that_was_tested() -> None:
     """Regression: a solved task printed `train 0/3` from the last iteration.
 

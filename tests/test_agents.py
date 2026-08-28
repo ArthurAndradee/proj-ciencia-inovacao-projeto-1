@@ -70,11 +70,45 @@ def test_critic_is_stateless_and_sanitizes_feedback() -> None:
     assert budget.by_role == {"critic": 2}
 
 
+def test_critic_uses_the_system_prompt_it_is_given() -> None:
+    client = ScriptedClient(["## CONTRADICTIONS\nfine"])
+    Critic(client=client, model="m", budget=Budget(limit=1), system="custom prompt").review("go")
+    assert client.calls[0].system == "custom prompt"
+
+    client2 = ScriptedClient(["## CONTRADICTIONS\nfine"])
+    Critic(client=client2, model="m", budget=Budget(limit=1)).review("go")
+    assert client2.calls[0].system == prompts.CRITIC_SYSTEM
+
+
 def test_critic_prompt_contains_the_ground_truth_but_generator_prompt_does_not() -> None:
     empty_run = RunResult(ok=True, error=None, cases=[])
-    critic_message: str = prompts.critic_request(TASK, "some rule", empty_run)
+    critic_message: str = prompts.critic_request(TASK, "some rule", "some code", empty_run)
     generator_message: str = prompts.generator_initial(TASK)
     target: str = "TEST OUTPUT"
     assert target in critic_message
     assert target not in generator_message
     assert "3" in generator_message  # the test input is shown
+
+
+def test_critic_request_includes_the_candidate_code() -> None:
+    empty_run = RunResult(ok=True, error=None, cases=[])
+    code: str = "def transform(grid): return grid  # distinctive_marker_xyz"
+    critic_message: str = prompts.critic_request(TASK, "some rule", code, empty_run)
+    assert "distinctive_marker_xyz" in critic_message
+
+
+def test_critic_request_no_oracle_never_contains_the_test_ground_truth() -> None:
+    empty_run = RunResult(ok=True, error=None, cases=[])
+    code: str = "def transform(grid): return grid  # distinctive_marker_xyz"
+    message: str = prompts.critic_request_no_oracle(TASK, "some rule", code, empty_run)
+    assert "TEST OUTPUT" not in message
+    assert "some rule" in message
+    assert "distinctive_marker_xyz" in message
+
+
+def test_critic_request_cegis_contains_the_ground_truth_and_the_code() -> None:
+    empty_run = RunResult(ok=True, error=None, cases=[])
+    code: str = "def transform(grid): return grid  # distinctive_marker_xyz"
+    message: str = prompts.critic_request_cegis(TASK, "some rule", code, empty_run)
+    assert "TEST OUTPUT" in message
+    assert "distinctive_marker_xyz" in message

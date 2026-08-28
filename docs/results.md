@@ -11,6 +11,14 @@ Detalhes de desenho em [experimental-decisions.md](experimental-decisions.md) ·
 execução passo a passo em [exemplo-execucao.md](exemplo-execucao.md) ·
 rodadas de calibração em [calibracao.md](calibracao.md).
 
+> **Nota (28/08/2026).** Esta página descreve a rodada com o Crítico **antes** da
+> correção do bug de acesso ao código (`experimental-decisions.md` §13) — o Crítico via
+> só a regra em linguagem natural, nunca o código candidato. Uma nova rodada, com o
+> Crítico corrigido e dois críticos adicionais (`critic_no_oracle`, `critic_cegis`,
+> §14), está em andamento; achados preliminares em [calibracao.md](calibracao.md#calibração-dos-críticos-novos-e-do-bug-corrigido-28082026).
+> Esta página será substituída quando a nova rodada fechar — mantida aqui até lá como
+> o último resultado completo e reprodutível.
+
 ---
 
 ## 1. Hipótese

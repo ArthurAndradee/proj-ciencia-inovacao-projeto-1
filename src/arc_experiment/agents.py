@@ -104,12 +104,13 @@ class Critic:
     client: LLMClient
     model: str
     budget: Budget
+    system: str = prompts.CRITIC_SYSTEM
 
     def review(self, user_message: str) -> Critique:
         self.budget.spend(CRITIC_ROLE)
         completion: Completion = self.client.generate(
             model=self.model,
-            system=prompts.CRITIC_SYSTEM,
+            system=self.system,
             messages=[Message(role="user", text=user_message)],
         )
         sanitized: guards.Sanitized = guards.sanitize(completion.text)

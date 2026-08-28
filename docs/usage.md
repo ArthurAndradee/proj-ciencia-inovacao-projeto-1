@@ -35,13 +35,21 @@ instalação; os números produzidos não têm valor experimental.
 | `arc-exp report --run-id <id>` | re-exibe o relatório de uma rodada concluída |
 | `arc-exp tasks --sample <n>` | lista quais tarefas a seed seleciona, sem executar |
 
-O modo escolhe as condições comparadas (ver [strategies.md](strategies.md)):
+O modo escolhe as condições comparadas (ver [strategies.md](strategies.md) e
+[experimental-decisions.md](experimental-decisions.md) §14):
 
 | `--mode` | Condição |
 | --- | --- |
 | `sampling` | apenas a amostragem independente (best-of-N) |
-| `critic` | apenas a revisão guiada pelo Agente Crítico |
-| `both` | as duas, sobre as mesmas tarefas (padrão) |
+| `critic` | apenas a revisão guiada pelo Agente Crítico (vê o gabarito, prosa livre) |
+| `critic-no-oracle` | crítico que nunca vê o gabarito do teste |
+| `critic-cegis` | crítico que vê o gabarito e devolve um contraexemplo estruturado |
+| `both` | `sampling` + `critic`, sobre as mesmas tarefas (padrão) |
+| `all` | as quatro condições, sobre as mesmas tarefas |
+
+As três condições de crítico alternam Gerador↔Crítico do mesmo jeito e custam 2 chamadas
+por ciclo de revisão — **o orçamento deve ser ímpar** vale para as três, pelo mesmo
+motivo que já valia para `critic` (ver seção 5 abaixo).
 
 Opções adicionais: `--split`, `--seed`, `--budget`, `--generator-model`,
 `--critic-model`, `--sampling-temperature`, `--rpm`, `--run-id`, `--fresh`, `--quiet`.
@@ -150,9 +158,10 @@ e a cota real precisa ser lida do campo `limit:` de um erro 429 — nunca do pai
 
 | Configuração | Requisições | Observação |
 | --- | --- | --- |
-| 100 tarefas, budget 7 | 1.400 | rodada oficial |
-| 50 tarefas, budget 7 | 700 | cabe em menos tempo, com menos poder estatístico |
-| 10 tarefas, budget 7 | 140 | verificação de diversidade antes da oficial |
+| 100 tarefas, budget 7, `--mode both` | 1.400 | rodada oficial (2 condições) |
+| 50 tarefas, budget 7, `--mode both` | 700 | cabe em menos tempo, com menos poder estatístico |
+| 30 tarefas, budget 7, `--mode all` | 840 | calibração dos críticos novos (4 condições) |
+| 10 tarefas, budget 7, `--mode both` | 140 | verificação de diversidade antes da oficial |
 
 O número é um teto: tarefas resolvidas cedo gastam menos que o orçamento. Reduzir o
 orçamento por tarefa é preferível a reduzir a amostra — o poder do teste pareado

@@ -89,7 +89,7 @@ def run_code(
     """Run transform() over the inputs of `pairs` and compare with expected outputs."""
     with tempfile.TemporaryDirectory(prefix="arc-exec-") as tmp:
         code_path: Path = Path(tmp) / "candidate.py"
-        code_path.write_text(code)
+        code_path.write_text(code, encoding="utf-8")
         payload: str = json.dumps([pair.input for pair in pairs])
         try:
             process = subprocess.run(
@@ -97,6 +97,7 @@ def run_code(
                 input=payload,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 timeout=timeout_s,
                 cwd=tmp,
                 preexec_fn=_resource_limits(memory_mb) if sys.platform != "win32" else None,

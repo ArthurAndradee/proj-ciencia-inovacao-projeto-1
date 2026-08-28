@@ -50,6 +50,8 @@ def _prompt_digest() -> dict[str, str]:
         for name, text in (
             ("generator_system", prompts.GENERATOR_SYSTEM),
             ("critic_system", prompts.CRITIC_SYSTEM),
+            ("critic_no_oracle_system", prompts.CRITIC_NO_ORACLE_SYSTEM),
+            ("critic_cegis_system", prompts.CRITIC_CEGIS_SYSTEM),
         )
     }
 
@@ -64,7 +66,7 @@ def write_manifest(run_dir: Path, config: Config, tasks: Sequence[Task]) -> Path
         "task_ids": [task.task_id for task in tasks],
     }
     path: Path = run_dir / "manifest.json"
-    path.write_text(json.dumps(manifest, indent=2) + "\n")
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return path
 
 
@@ -73,7 +75,7 @@ def completed_task_ids(path: Path) -> set[str]:
     if not path.exists():
         return set()
     done: set[str] = set()
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         if line.strip():
             done.add(str(json.loads(line)["task_id"]))
     return done
@@ -106,7 +108,7 @@ def pending_work(
 
 
 def append_outcome(path: Path, outcome: TaskOutcome) -> None:
-    with path.open("a") as handle:
+    with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(outcome.to_dict(), ensure_ascii=False) + "\n")
         handle.flush()
 

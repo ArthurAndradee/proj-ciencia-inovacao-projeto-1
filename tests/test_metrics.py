@@ -104,3 +104,14 @@ def test_mcnemar_known_values() -> None:
 
 def test_mcnemar_detects_a_strong_effect() -> None:
     assert exact_mcnemar_p(1, 12) < 0.01
+
+
+def test_compare_is_agnostic_to_condition_labels() -> None:
+    # No code change was needed to support the new critic conditions: compare()
+    # only ever reads task_id/solved/error and echoes back whatever labels it is
+    # given, so any pair of condition names works, not just sampling/critic.
+    no_oracle = [record("a", "critic_no_oracle", True), record("b", "critic_no_oracle", False)]
+    cegis = [record("a", "critic_cegis", False), record("b", "critic_cegis", False)]
+    result = compare(no_oracle, cegis, "critic_no_oracle", "critic_cegis")
+    assert result.label_a == "critic_no_oracle" and result.label_b == "critic_cegis"
+    assert result.only_a == 1 and result.only_b == 0 and result.neither == 1
