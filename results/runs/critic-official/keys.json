@@ -1,30 +1,24 @@
 [
   {
     "key": "key1",
-    "calls": 163,
-    "failures": 1,
+    "calls": 7,
+    "failures": 0,
     "rejected": false,
-    "exhausted": [
-      "gemini-3.5-flash-lite"
-    ]
+    "exhausted": []
   },
   {
     "key": "key2",
-    "calls": 164,
-    "failures": 1,
+    "calls": 7,
+    "failures": 0,
     "rejected": false,
-    "exhausted": [
-      "gemini-3.5-flash-lite"
-    ]
+    "exhausted": []
   },
   {
     "key": "key3",
-    "calls": 163,
-    "failures": 1,
+    "calls": 7,
+    "failures": 0,
     "rejected": false,
-    "exhausted": [
-      "gemini-3.5-flash-lite"
-    ]
+    "exhausted": []
   },
   {
     "key": "key4",
@@ -35,21 +29,17 @@
   },
   {
     "key": "key5",
-    "calls": 48,
-    "failures": 1,
+    "calls": 7,
+    "failures": 0,
     "rejected": false,
-    "exhausted": [
-      "gemini-3.5-flash-lite"
-    ]
+    "exhausted": []
   },
   {
     "key": "key6",
-    "calls": 164,
-    "failures": 1,
+    "calls": 7,
+    "failures": 0,
     "rejected": false,
-    "exhausted": [
-      "gemini-3.5-flash-lite"
-    ]
+    "exhausted": []
   },
   {
     "key": "key7",
@@ -67,11 +57,9 @@
   },
   {
     "key": "key9",
-    "calls": 99,
-    "failures": 1,
+    "calls": 7,
+    "failures": 0,
     "rejected": false,
-    "exhausted": [
-      "gemini-3.5-flash-lite"
-    ]
+    "exhausted": []
   }
 ]

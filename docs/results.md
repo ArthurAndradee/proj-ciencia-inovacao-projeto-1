@@ -8,8 +8,7 @@ rodadas de calibração em [calibracao.md](calibracao.md).
 
 # Parte A — Crítico corrigido + dois críticos novos
 
-**58 de 60 tarefas-alvo do ARC-AGI-1 · `gemini-3.5-flash-lite` · 28/08/2026 · commit
-`c7f12b4`**
+**60 tarefas do ARC-AGI-1 · `gemini-3.5-flash-lite` · 28/08/2026 · commit `d8e57e3`**
 
 > **Nenhuma das 5 comparações pré-registradas é significativa sob a correção de
 > Bonferroni (α = 0,05/5 = 0,01).** A mais próxima — `critic` vs `critic_cegis` —
@@ -17,7 +16,7 @@ rodadas de calibração em [calibracao.md](calibracao.md).
 > mas **não** sobrevive à correção para as 5 comparações simultâneas pré-registradas em
 > `experimental-decisions.md` §14. Com o crítico corrigido (agora vendo o código, não só
 > a regra), a direção observada nesta amostra favorece `critic` sobre `sampling`
-> (+6,9 pp), o oposto do sinal visto na calibração de 30 tarefas — instabilidade
+> (+6,7 pp), o oposto do sinal visto na calibração de 30 tarefas — instabilidade
 > consistente com o tamanho de amostra ainda pequeno frente às 270 tarefas da Parte B.
 
 ## A.1 O que mudou frente à Parte B (abaixo)
@@ -29,7 +28,7 @@ responde em vocabulário fechado — um contraexemplo + uma classe de correção
 de CEGIS). Desenho completo em `experimental-decisions.md` §14.
 
 `sampling` é reaproveitado da rodada da Parte B (mesma seed, mesmo split, mesmas 270
-tarefas já incluem as 58 usadas aqui) — não foi re-executado.
+tarefas já incluem as 60 usadas aqui) — não foi re-executado.
 
 ## A.2 Metodologia
 
@@ -52,36 +51,37 @@ Parte B (aquela é para múltiplas *olhadas no tempo*, esta é para múltiplas c
 
 **Escala menor que a Parte B, declarada como limitação, não escondida.** A amostra-alvo
 era 60 tarefas (não 270) — uma escolha deliberada de calibração/tempo diante de cota de
-API limitada (ver §A.4) — e a rodada parou em **58/60**: a cota diária se esgotou
-faltando 2 tarefas (`31adaf00`, `3490cc26`), que não têm registro nas três condições
-novas. Os dados abaixo cobrem as 58 completas.
+API limitada (ver §A.4). A rodada ficou 58/60 por duas rodadas seguidas (cota diária
+esgotada faltando `31adaf00` e `3490cc26`), e fechou em **60/60** numa terceira
+tentativa, quando a cota já tinha um pouco de folga. As duas tarefas que faltavam
+falharam nas quatro condições — não mudam nenhum p-valor, só o denominador da acurácia.
 
 ## A.3 Resultados
 
-| Condição | Resolvidas (de 58) | Acurácia | Consist. treino | Programas/tarefa | Tokens/tarefa |
+| Condição | Resolvidas (de 60) | Acurácia | Consist. treino | Programas/tarefa | Tokens/tarefa |
 | --- | --- | --- | --- | --- | --- |
-| `sampling` | 19/58 | 32,8% | 37,9% | 5,28 | ~25,0 k |
-| `critic` (corrigido) | 23/58 | **39,7%** | 43,1% | 3,09 | ~43,0 k |
-| `critic_no_oracle` | 17/58 | 29,3% | 34,5% | 3,28 | ~40,1 k |
-| `critic_cegis` | 16/58 | 27,6% | 31,0% | 3,29 | ~45,1 k |
+| `sampling` | 19/60 | 31,7% | 36,7% | 5,33 | ~25,8 k |
+| `critic` (corrigido) | 23/60 | **38,3%** | 41,7% | 3,12 | ~44,3 k |
+| `critic_no_oracle` | 17/60 | 28,3% | 33,3% | 3,30 | ~41,6 k |
+| `critic_cegis` | 16/60 | 26,7% | 30,0% | 3,32 | ~46,3 k |
 
 **As 5 comparações pareadas:**
 
 | Par | Discordantes | McNemar exato (p) | IC 95% da diferença | Significativo (α=0,01)? |
 | --- | --- | --- | --- | --- |
-| `sampling` vs `critic` | 6 (1×5) | 0,2188 | −1,3 pp a +9,7 pp | não |
-| `sampling` vs `critic_no_oracle` | 10 (6×4) | 0,7539 | −11,4 pp a +6,5 pp | não |
-| `sampling` vs `critic_cegis` | 7 (5×2) | 0,4531 | −10,1 pp a +3,4 pp | não |
-| `critic` vs `critic_no_oracle` | 10 (8×2) | 0,1094 | −15,3 pp a +0,3 pp | não |
-| `critic` vs `critic_cegis` | 9 (8×1) | **0,0391** | −14,9 pp a −2,0 pp | **não** (não sobrevive a α=0,01) |
+| `sampling` vs `critic` | 6 (1×5) | 0,2188 | −1,3 pp a +9,4 pp | não |
+| `sampling` vs `critic_no_oracle` | 10 (6×4) | 0,7539 | −11,1 pp a +6,2 pp | não |
+| `sampling` vs `critic_cegis` | 7 (5×2) | 0,4531 | −9,7 pp a +3,3 pp | não |
+| `critic` vs `critic_no_oracle` | 10 (8×2) | 0,1094 | −14,8 pp a +0,3 pp | não |
+| `critic` vs `critic_cegis` | 9 (8×1) | **0,0391** | −14,4 pp a −1,9 pp | **não** (não sobrevive a α=0,01) |
 
 ## A.4 Interpretação
 
 **A direção inverteu frente à calibração de 30 tarefas — e isso é o próprio ponto.** Na
 calibração, `critic` corrigido tinha acurácia *abaixo* de `sampling` (23,3% contra
-36,7%); aqui, com quase o dobro de tarefas, está *acima* (39,7% contra 32,8%), e ainda
+36,7%); aqui, com o dobro de tarefas, está *acima* (38,3% contra 31,7%), e ainda
 assim sem significância em nenhum dos dois tamanhos de amostra. As duas leituras não são
-contraditórias — são o mesmo sintoma: com n=30 ou n=58, a estimativa de acurácia tem
+contraditórias — são o mesmo sintoma: com n=30 ou n=60, a estimativa de acurácia tem
 variância grande demais para revelar direção de forma confiável. É por isso que a Parte B
 precisou de 270 tarefas para ter poder estatístico, e por isso esta rodada não pretende
 substituir aquela conclusão — só testar se o crítico corrigido e os críticos novos
@@ -92,26 +92,22 @@ chega perto de significância isolada (`critic` vs `critic_cegis`, p=0,0391) vai
 ele — mas não sobrevive à correção pré-registrada para 5 comparações simultâneas.
 Reportado como um sinal a acompanhar numa amostra maior, não como conclusão.
 
-**Vocabulário fechado do CEGIS se manteve estável**: nas 58 tarefas, todas as críticas
+**Vocabulário fechado do CEGIS se manteve estável**: nas 60 tarefas, todas as críticas
 de `critic_cegis` respeitaram o rótulo fechado de `CORRECTION CLASS` (mesmo padrão de
 72/72 observado na calibração) — o formato estruturado funciona mecanicamente, o que
 não se traduziu em vantagem de acurácia nesta amostra.
 
 **Limitações desta parte.**
 
-1. **Escala menor que a Parte B** (58-60 tarefas contra 270) — poder estatístico baixo
+1. **Escala menor que a Parte B** (60 tarefas contra 270) — poder estatístico baixo
    por desenho; nenhuma das 5 comparações deveria ser lida como conclusiva.
-2. **2 tarefas pendentes** (`31adaf00`, `3490cc26`) por esgotamento de cota diária —
-   podem ser adicionadas depois com `arc-exp run --tasks-file
-   results/runs/critic-official/task-list-60.txt --mode all --budget 7 --run-id
-   critic-official`.
-3. **3 das 9 chaves de API usadas nesta rodada retornam 401** ("bound service account
+2. **3 das 9 chaves de API usadas nesta rodada retornam 401** ("bound service account
    deleted or disabled" / credenciais inválidas) — reduz a capacidade disponível para
    qualquer extensão futura; não afeta a corretude dos dados coletados.
-4. **`critic` consome ~72% mais tokens por tarefa que `sampling`** (~43,0k contra
-   ~25,0k) nesta amostra — mesma ameaça à validade já registrada na Parte B sobre a
+3. **`critic` consome ~72% mais tokens por tarefa que `sampling`** (~44,3k contra
+   ~25,8k) nesta amostra — mesma ameaça à validade já registrada na Parte B sobre a
    unidade do orçamento.
-5. Mesmas limitações estruturais da Parte B (execução única por tarefa, oráculo não
+4. Mesmas limitações estruturais da Parte B (execução única por tarefa, oráculo não
    autônomo) se aplicam aqui.
 
 ```bash
