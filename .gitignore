@@ -12,6 +12,7 @@ venv/
 # reproduziveis.
 results/runs/*
 !results/runs/official/
+!results/runs/critic-official/
 !results/.gitkeep
 
 results/gemma-run.log

@@ -1,0 +1,77 @@
+[
+  {
+    "key": "key1",
+    "calls": 163,
+    "failures": 1,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ]
+  },
+  {
+    "key": "key2",
+    "calls": 164,
+    "failures": 1,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ]
+  },
+  {
+    "key": "key3",
+    "calls": 163,
+    "failures": 1,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ]
+  },
+  {
+    "key": "key4",
+    "calls": 0,
+    "failures": 1,
+    "rejected": true,
+    "exhausted": []
+  },
+  {
+    "key": "key5",
+    "calls": 48,
+    "failures": 1,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ]
+  },
+  {
+    "key": "key6",
+    "calls": 164,
+    "failures": 1,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ]
+  },
+  {
+    "key": "key7",
+    "calls": 0,
+    "failures": 1,
+    "rejected": true,
+    "exhausted": []
+  },
+  {
+    "key": "key8",
+    "calls": 0,
+    "failures": 1,
+    "rejected": true,
+    "exhausted": []
+  },
+  {
+    "key": "key9",
+    "calls": 99,
+    "failures": 1,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ]
+  }
+]
