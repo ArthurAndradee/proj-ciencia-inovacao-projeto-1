@@ -4,6 +4,21 @@
 ## Recapitulação
 > Dado um **orçamento fixo de chamadas a um LLM**, é melhor gastar esse orçamento **diversificando** (várias tentativas independentes) ou **iterando** (uma tentativa revisada por um Agente Crítico)?
 
+### O ciclo de uma tarefa
+
+```
+Gerador propõe regra + código
+        │
+        ▼
+Executor roda o código nos pares de treino (sandbox isolado)
+        │
+        ├── acertou tudo? ──────────────────────────► para (train_consistent)
+        ├── orçamento esgotado? ────────────────────► para (budget_exhausted)
+        │
+        ▼
+Crítico avalia (uma das 3 variantes) ──► filtro anti-vazamento ──► volta pro Gerador
+```
+
 ## 📌 Resumo
 Nesta semana, as principais entregas envolveram a correção de um bug crítico no oráculo, a implementação de novos críticos e a execução de experimentos de calibração (30 tarefas) e avaliação (60 tarefas). Os resultados confirmaram que as variações de desempenho observadas até agora não são estatisticamente significativas, indicando ruído estatístico de amostra pequena.
 
@@ -108,4 +123,42 @@ folga disponível. Leitura **interina**, não final:
 ## 🚧 Próximos Passos e Pendências
 * Avaliar o tempo e o custo de estender o experimento para as 270 tarefas completas.
 
+
+### Casos práticos
+### Tarefa `070dd51e` — o mecanismo funcionando (e um limite do CEGIS)
+
+A regra tem um detalhe escondido: quando linhas de cores diferentes se cruzam, a
+vertical tem prioridade sobre a horizontal.
+
+| Condição | Resultado | Chamadas |
+|---|---|---|
+| `sampling` | ✗ (7 tentativas, mesmo erro sempre) | 7 |
+| `critic` | ✓ | 3 |
+| `critic_no_oracle` | ✓ | 3 |
+| `critic_cegis` | ✗ | 7 |
+
+`critic_no_oracle` resolveu **sem nunca ver o gabarito**, só comparando código com a
+regra:
+
+> *"The code faithfully implements the stated rule by independently drawing
+> horizontal and vertical line segments... overwriting grid cells where different
+> colors intersect without any prioritization."*
+
+`critic_cegis`, apesar de ver o gabarito, falhou — seu rótulo fechado
+(`WRONG_TRANSFORM`) nunca conseguiu comunicar *qual* cor tem prioridade sobre qual.
+
+### Tarefa `281123b4` — uma vitória que não prova nada
+
+| Condição | Resultado | Chamadas | Iterações |
+|---|---|---|---|
+| `sampling` | ✗ | 7 | 7 |
+| `critic` | ✓ | **1** | **1** |
+| `critic_no_oracle` | ✓ | **1** | **1** |
+
+`critic` e `critic_no_oracle` resolveram **na primeira geração** — nenhuma crítica foi
+chamada. A primeira geração usa o mesmo prompt em todas as condições; só a
+temperatura muda. Aqui a temperatura baixa acertou de primeira; a alta, mais
+exploratória, errou sete vezes seguidas. **Isso não é mérito do crítico** — é lembrete
+de por que a conclusão do projeto se apoia no teste pareado sobre a amostra inteira,
+não em casos isolados.
 
