@@ -1,7 +1,9 @@
 # Resultados
 
 Detalhes de desenho em [experimental-decisions.md](experimental-decisions.md) ·
-execução passo a passo em [exemplo-execucao.md](exemplo-execucao.md) ·
+execução passo a passo (crítico original) em [exemplo-execucao.md](exemplo-execucao.md) ·
+exemplos de acerto/falha dos críticos novos em
+[exemplo-execucao-criticos-novos.md](exemplo-execucao-criticos-novos.md) ·
 rodadas de calibração em [calibracao.md](calibracao.md).
 
 ---
