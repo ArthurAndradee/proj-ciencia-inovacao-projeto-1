@@ -1,4 +1,125 @@
-# Resultados — rodada oficial
+# Resultados
+
+Detalhes de desenho em [experimental-decisions.md](experimental-decisions.md) ·
+execução passo a passo (crítico original) em [exemplo-execucao.md](exemplo-execucao.md) ·
+exemplos de acerto/falha dos críticos novos em
+[exemplo-execucao-criticos-novos.md](exemplo-execucao-criticos-novos.md) ·
+rodadas de calibração em [calibracao.md](calibracao.md).
+
+---
+
+# Parte A — Crítico corrigido + dois críticos novos
+
+**60 tarefas do ARC-AGI-1 · `gemini-3.5-flash-lite` · 28/08/2026 · commit `d8e57e3`**
+
+> **Nenhuma das 5 comparações pré-registradas é significativa sob a correção de
+> Bonferroni (α = 0,05/5 = 0,01).** A mais próxima — `critic` vs `critic_cegis` —
+> chega a p = 0,0391 sem correção, o que pareceria significativo a α = 0,05 isolado,
+> mas **não** sobrevive à correção para as 5 comparações simultâneas pré-registradas em
+> `experimental-decisions.md` §14. Com o crítico corrigido (agora vendo o código, não só
+> a regra), a direção observada nesta amostra favorece `critic` sobre `sampling`
+> (+6,7 pp), o oposto do sinal visto na calibração de 30 tarefas — instabilidade
+> consistente com o tamanho de amostra ainda pequeno frente às 270 tarefas da Parte B.
+
+## A.1 O que mudou frente à Parte B (abaixo)
+
+Esta rodada usa o crítico **corrigido** (`prompts.critic_request` agora inclui o código
+candidato, não só a regra — `experimental-decisions.md` §13) e adiciona duas condições:
+`critic_no_oracle` (nunca vê o gabarito do teste) e `critic_cegis` (vê o gabarito, mas
+responde em vocabulário fechado — um contraexemplo + uma classe de correção, no espírito
+de CEGIS). Desenho completo em `experimental-decisions.md` §14.
+
+`sampling` é reaproveitado da rodada da Parte B (mesma seed, mesmo split, mesmas 270
+tarefas já incluem as 60 usadas aqui) — não foi re-executado.
+
+## A.2 Metodologia
+
+Mesmo desenho pareado da Parte B (McNemar exato, IC de Wilson), estendido para uma
+**família de 5 comparações pré-registradas** em vez de uma só:
+
+| # | Par | Isola |
+| --- | --- | --- |
+| 1 | `sampling` vs `critic` | hipótese original, com o bug corrigido |
+| 2 | `sampling` vs `critic_no_oracle` | valor da crítica estruturada sem oráculo |
+| 3 | `sampling` vs `critic_cegis` | valor do oráculo em forma de contraexemplo único |
+| 4 | `critic` vs `critic_no_oracle` | valor do acesso ao gabarito, mantendo a forma prosa |
+| 5 | `critic` vs `critic_cegis` | valor da forma estruturada, mantendo o acesso ao gabarito |
+
+Com 5 testes simultâneos sobre os mesmos dados, a correção de **Bonferroni** (α =
+0,05/5 = 0,01) evita inflar o erro tipo I — distinta da correção de Pocock usada na
+Parte B (aquela é para múltiplas *olhadas no tempo*, esta é para múltiplas comparações
+*simultâneas*). `critic_no_oracle` vs `critic_cegis` fica fora da família pré-registrada
+(varia duas dimensões ao mesmo tempo) e não é testada.
+
+**Escala menor que a Parte B, declarada como limitação, não escondida.** A amostra-alvo
+era 60 tarefas (não 270) — uma escolha deliberada de calibração/tempo diante de cota de
+API limitada (ver §A.4). A rodada ficou 58/60 por duas rodadas seguidas (cota diária
+esgotada faltando `31adaf00` e `3490cc26`), e fechou em **60/60** numa terceira
+tentativa, quando a cota já tinha um pouco de folga. As duas tarefas que faltavam
+falharam nas quatro condições — não mudam nenhum p-valor, só o denominador da acurácia.
+
+## A.3 Resultados
+
+| Condição | Resolvidas (de 60) | Acurácia | Consist. treino | Programas/tarefa | Tokens/tarefa |
+| --- | --- | --- | --- | --- | --- |
+| `sampling` | 19/60 | 31,7% | 36,7% | 5,33 | ~25,8 k |
+| `critic` (corrigido) | 23/60 | **38,3%** | 41,7% | 3,12 | ~44,3 k |
+| `critic_no_oracle` | 17/60 | 28,3% | 33,3% | 3,30 | ~41,6 k |
+| `critic_cegis` | 16/60 | 26,7% | 30,0% | 3,32 | ~46,3 k |
+
+**As 5 comparações pareadas:**
+
+| Par | Discordantes | McNemar exato (p) | IC 95% da diferença | Significativo (α=0,01)? |
+| --- | --- | --- | --- | --- |
+| `sampling` vs `critic` | 6 (1×5) | 0,2188 | −1,3 pp a +9,4 pp | não |
+| `sampling` vs `critic_no_oracle` | 10 (6×4) | 0,7539 | −11,1 pp a +6,2 pp | não |
+| `sampling` vs `critic_cegis` | 7 (5×2) | 0,4531 | −9,7 pp a +3,3 pp | não |
+| `critic` vs `critic_no_oracle` | 10 (8×2) | 0,1094 | −14,8 pp a +0,3 pp | não |
+| `critic` vs `critic_cegis` | 9 (8×1) | **0,0391** | −14,4 pp a −1,9 pp | **não** (não sobrevive a α=0,01) |
+
+## A.4 Interpretação
+
+**A direção inverteu frente à calibração de 30 tarefas — e isso é o próprio ponto.** Na
+calibração, `critic` corrigido tinha acurácia *abaixo* de `sampling` (23,3% contra
+36,7%); aqui, com o dobro de tarefas, está *acima* (38,3% contra 31,7%), e ainda
+assim sem significância em nenhum dos dois tamanhos de amostra. As duas leituras não são
+contraditórias — são o mesmo sintoma: com n=30 ou n=60, a estimativa de acurácia tem
+variância grande demais para revelar direção de forma confiável. É por isso que a Parte B
+precisou de 270 tarefas para ter poder estatístico, e por isso esta rodada não pretende
+substituir aquela conclusão — só testar se o crítico corrigido e os críticos novos
+merecem ser levados à mesma escala.
+
+**`critic_cegis` teve o pior desempenho entre os quatro**, e a única comparação que
+chega perto de significância isolada (`critic` vs `critic_cegis`, p=0,0391) vai contra
+ele — mas não sobrevive à correção pré-registrada para 5 comparações simultâneas.
+Reportado como um sinal a acompanhar numa amostra maior, não como conclusão.
+
+**Vocabulário fechado do CEGIS se manteve estável**: nas 60 tarefas, todas as críticas
+de `critic_cegis` respeitaram o rótulo fechado de `CORRECTION CLASS` (mesmo padrão de
+72/72 observado na calibração) — o formato estruturado funciona mecanicamente, o que
+não se traduziu em vantagem de acurácia nesta amostra.
+
+**Limitações desta parte.**
+
+1. **Escala menor que a Parte B** (60 tarefas contra 270) — poder estatístico baixo
+   por desenho; nenhuma das 5 comparações deveria ser lida como conclusiva.
+2. **3 das 9 chaves de API usadas nesta rodada retornam 401** ("bound service account
+   deleted or disabled" / credenciais inválidas) — reduz a capacidade disponível para
+   qualquer extensão futura; não afeta a corretude dos dados coletados.
+3. **`critic` consome ~72% mais tokens por tarefa que `sampling`** (~44,3k contra
+   ~25,8k) nesta amostra — mesma ameaça à validade já registrada na Parte B sobre a
+   unidade do orçamento.
+4. Mesmas limitações estruturais da Parte B (execução única por tarefa, oráculo não
+   autônomo) se aplicam aqui.
+
+```bash
+uv run arc-exp run --tasks-file results/runs/critic-official/task-list-60.txt \
+  --mode all --budget 7 --run-id critic-official
+```
+
+---
+
+# Parte B — rodada oficial original (crítico pré-correção)
 
 **270 tarefas do ARC-AGI-1 · `gemini-3.5-flash-lite` · 21/08/2026 · commit `5fdda8d`**
 
@@ -7,13 +128,13 @@
 > (McNemar exato). O intervalo de confiança limita qualquer vantagem do Crítico a
 > **+4,3 pp**.
 
-Detalhes de desenho em [experimental-decisions.md](experimental-decisions.md) ·
-execução passo a passo em [exemplo-execucao.md](exemplo-execucao.md) ·
-rodadas de calibração em [calibracao.md](calibracao.md).
+> **Nota.** Esta parte descreve a rodada com o Crítico **antes** da correção do bug de
+> acesso ao código (`experimental-decisions.md` §13) — o Crítico via só a regra em
+> linguagem natural, nunca o código candidato. Mantida aqui como o resultado em escala
+> completa (270 tarefas) e como baseline metodológico; a Parte A acima é o que muda com
+> a correção e os críticos novos, ainda em escala reduzida.
 
----
-
-## 1. Hipótese
+## B.1 Hipótese
 
 Sob um **orçamento fixo de chamadas à API**, é melhor gastar tudo em tentativas
 independentes (*diversificar*) ou gastar parte do orçamento revisando a mesma tentativa
@@ -27,7 +148,7 @@ independentes (*diversificar*) ou gastar parte do orçamento revisando a mesma t
 O Crítico enxerga o gabarito do par de teste e devolve apenas contradições em linguagem
 natural. **Esperava-se que a informação privilegiada compensasse as iterações a menos.**
 
-## 2. Metodologia
+## B.2 Metodologia
 
 **Desenho pareado:** as mesmas 270 tarefas rodam nas duas condições, com o mesmo
 orçamento de 7 chamadas por tarefa. Amostra sorteada de `evaluation` com seed 20260814,
@@ -61,7 +182,7 @@ IC₉₅ = 0,35 a 0,61   →   em acurácia: −5,6 pp a +4,3 pp,  via d·(2π�
 
 **Fisher exato** nas comparações não pareadas (overfit entre condições).
 
-## 3. Resultados
+## B.3 Resultados
 
 | Condição | Resolvidas | Acurácia | Consist. treino | Programas/tarefa | Tokens |
 | --- | --- | --- | --- | --- | --- |
@@ -83,7 +204,7 @@ informam qual estratégia é melhor:
 | **McNemar exato** | **p = 0,8877** |
 | **IC 95% da diferença** | **−5,6 pp a +4,3 pp** |
 
-## 4. Interpretação
+## B.4 Interpretação
 
 **O resultado é nulo, e bem medido.** As duas condições resolvem quase o mesmo conjunto:
 62 tarefas em comum, 158 em que ambas falham. As 50 discordâncias se dividem ao meio. A

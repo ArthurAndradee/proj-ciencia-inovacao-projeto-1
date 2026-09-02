@@ -29,7 +29,15 @@ from .runner import Condition, TaskOutcome
 MODES: dict[str, tuple[Condition, ...]] = {
     "sampling": (Condition.SAMPLING,),
     "critic": (Condition.CRITIC,),
+    "critic-no-oracle": (Condition.CRITIC_NO_ORACLE,),
+    "critic-cegis": (Condition.CRITIC_CEGIS,),
     "both": (Condition.SAMPLING, Condition.CRITIC),
+    "all": (
+        Condition.SAMPLING,
+        Condition.CRITIC,
+        Condition.CRITIC_NO_ORACLE,
+        Condition.CRITIC_CEGIS,
+    ),
 }
 
 DRY_RUN_ANSWER: str = (
@@ -64,7 +72,9 @@ def build_parser() -> argparse.ArgumentParser:
         choices=sorted(MODES),
         default="both",
         help="sampling = best-of-N only, critic = oracle critic only, "
-        "both = the paired comparison",
+        "critic-no-oracle = critic without ground truth, "
+        "critic-cegis = oracle critic with a structured counterexample, "
+        "both = sampling + critic, all = every condition",
     )
     run.add_argument("--split", choices=("training", "evaluation"))
     run.add_argument("--seed", type=int)
@@ -140,7 +150,7 @@ def config_from_args(args: argparse.Namespace) -> Config:
 def read_task_ids(path: Path) -> list[str]:
     """Task ids from a file, one per line; blank lines and # comments ignored."""
     ids: list[str] = []
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         stripped: str = line.split("#", 1)[0].strip()
         if stripped:
             ids.append(stripped)
@@ -315,7 +325,7 @@ def key_usage_table(client: PooledClient, run_dir: Path) -> str:
     whether it was the quota that ended it or something else.
     """
     usage: list[dict[str, Any]] = client.usage()
-    (run_dir / "keys.json").write_text(json.dumps(usage, indent=2) + "\n")
+    (run_dir / "keys.json").write_text(json.dumps(usage, indent=2) + "\n", encoding="utf-8")
     lines: list[str] = ["API keys"]
     for entry in usage:
         spent: str = (
@@ -339,7 +349,9 @@ def render_run(
         condition.value: load_outcomes(run_dir / f"{condition.value}.jsonl")
         for condition in conditions
     }
-    return report.full_report(records, show_tasks=show_tasks)
+    return report.full_report(
+        records, show_tasks=show_tasks, comparison_pairs=report.PRIMARY_COMPARISONS
+    )
 
 
 def command_report(args: argparse.Namespace) -> int:

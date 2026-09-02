@@ -15,7 +15,11 @@ from .runner import TaskOutcome
 def load_outcomes(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def as_records(outcomes: Sequence[TaskOutcome]) -> list[dict[str, Any]]:

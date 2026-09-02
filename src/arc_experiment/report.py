@@ -11,6 +11,14 @@ from .runner import TaskOutcome
 SOLVED = "✓"
 UNSOLVED = "✗"
 
+PRIMARY_COMPARISONS: tuple[tuple[str, str], ...] = (
+    ("sampling", "critic"),
+    ("sampling", "critic_no_oracle"),
+    ("sampling", "critic_cegis"),
+    ("critic", "critic_no_oracle"),
+    ("critic", "critic_cegis"),
+)
+
 
 def _mark(solved: bool) -> str:
     return SOLVED if solved else UNSOLVED
@@ -143,8 +151,16 @@ def task_table(
 def full_report(
     records_by_condition: dict[str, list[dict[str, Any]]],
     show_tasks: bool = True,
+    comparison_pairs: Sequence[tuple[str, str]] | None = None,
 ) -> str:
-    """Complete console report: per-task table, summaries and paired comparison."""
+    """Complete console report: per-task table, summaries and paired comparison(s).
+
+    `comparison_pairs` names which condition pairs to run McNemar on. Left at its
+    default, a 2-condition run compares its only pair and anything else compares
+    none — the behaviour this function always had. Passing `PRIMARY_COMPARISONS`
+    runs the pre-registered family instead; pairs missing data are skipped rather
+    than raising, so the same call works whether one or all four conditions ran.
+    """
     blocks: list[str] = []
     labels: list[str] = [label for label, records in records_by_condition.items() if records]
     if not labels:
@@ -157,14 +173,21 @@ def full_report(
         summary_table([summarize(records_by_condition[label], label) for label in labels])
     )
 
-    if len(labels) == 2:
+    pairs: Sequence[tuple[str, str]] = (
+        comparison_pairs
+        if comparison_pairs is not None
+        else ([(labels[0], labels[1])] if len(labels) == 2 else [])
+    )
+    for label_a, label_b in pairs:
+        if not records_by_condition.get(label_a) or not records_by_condition.get(label_b):
+            continue
         blocks.append(
             comparison_block(
                 compare(
-                    records_by_condition[labels[0]],
-                    records_by_condition[labels[1]],
-                    labels[0],
-                    labels[1],
+                    records_by_condition[label_a],
+                    records_by_condition[label_b],
+                    label_a,
+                    label_b,
                 )
             )
         )

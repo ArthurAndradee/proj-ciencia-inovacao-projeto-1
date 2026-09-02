@@ -39,7 +39,7 @@ def main() -> None:
 
     namespace: dict[str, Any] = {"__name__": "__arc_candidate__"}
     try:
-        with open(code_path) as handle:
+        with open(code_path, encoding="utf-8") as handle:
             source: str = handle.read()
         exec(compile(source, "<candidate>", "exec"), namespace)
     except BaseException as exc:  # syntax, import or module-level failure

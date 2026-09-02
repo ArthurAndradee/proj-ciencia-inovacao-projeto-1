@@ -74,3 +74,71 @@ amostragem não tem.
 Três tarefas reproduziram todos os pares de treino e erraram o teste. Nenhuma foi
 resolvida pelo Crítico, apesar de serem exatamente os casos em que ver o gabarito
 deveria ajudar.
+
+## Calibração dos críticos novos e do bug corrigido (28/08/2026)
+
+30 tarefas de `evaluation`, seed 20260814, `BUDGET_CALLS=7`, `gemini-3.5-flash-lite` nos
+dois papéis, `--mode all` (as quatro condições). Commit `45a4f8e` + as mudanças de
+`critic_request`/`CriticSpec`/prompts ainda não commitadas no momento da rodada — dados
+de calibração, não a rodada oficial. Manifesto e JSONL em
+`results/runs/critic-calibration/` (não versionado, como as demais rodadas fora de
+`official/`).
+
+**O bug estava mesmo lá, e a correção funciona.** Inspecionando `critic_raw` das
+críticas: *"The stated rule and code incorrectly assume an intersection-based logical
+operation... the code implements a simpler neighborhood check for any cell adjacent to
+both a 4 and a 5, converting many incorrect cells..."* — o Crítico agora fala do que **o
+código faz**, não só da regra enunciada. Antes da correção isso era estruturalmente
+impossível, porque o código nunca chegava ao prompt.
+
+**O vocabulário fechado do CEGIS se sustentou.** Das 72 críticas emitidas por
+`critic_cegis` na rodada, **72/72** trouxeram um rótulo válido de `CORRECTION CLASS`
+(`MISSING_CASE | WRONG_TRANSFORM | WRONG_GEOMETRY | WRONG_COLOR_MAP | WRONG_SCOPE |
+OTHER`). O risco levantado no plano — o modelo fugir do vocabulário — não se
+confirmou nesta amostra.
+
+**Nenhum erro de execução, nenhum vazamento.** `Errors=0` e `Leaks=0` nas quatro
+condições (só 1 truncamento em `critic_cegis`, sem impacto). O orçamento ímpar de 7 se
+comportou como esperado nas três condições de crítico (`cri=3 gen=4` ou `cri=2 gen=4`
+nos casos que não pararam cedo).
+
+**Resultado agregado — nenhuma condição bateu `sampling`, e nenhuma diferença é
+significativa nesta escala (n=30):**
+
+| Condição | Resolvidas | Acurácia | Consist. treino |
+| --- | --- | --- | --- |
+| `sampling` | 11/30 | 36,7% | 40,0% |
+| `critic` (corrigido) | 7/30 | 23,3% | 26,7% |
+| `critic_no_oracle` | 8/30 | 26,7% | 33,3% |
+| `critic_cegis` | 6/30 | 20,0% | 26,7% |
+
+| Par | Discordantes | McNemar exato |
+| --- | --- | --- |
+| `sampling` vs `critic` | 6 (5×1) | p = 0,2188 |
+| `sampling` vs `critic_no_oracle` | 5 (4×1) | p = 0,3750 |
+| `sampling` vs `critic_cegis` | 7 (6×1) | p = 0,1250 |
+| `critic` vs `critic_no_oracle` | 9 (4×5) | p = 1,0000 |
+| `critic` vs `critic_cegis` | 7 (4×3) | p = 1,0000 |
+
+Nenhum p cruza nem o α = 0,05 nominal, muito menos o α = 0,01 de Bonferroni da família
+pré-registrada — **como esperado numa calibração de 30 tarefas**, que não tem poder para
+detectar o que a rodada oficial de 270 já mostrou ser um efeito pequeno (McNemar 100→270
+em `experimental-decisions.md` §12). O sinal direcional (as três condições de crítico
+abaixo de `sampling`) é consistente com o resultado nulo/levemente negativo da rodada
+oficial — não há indício de que o bug corrigido, o crítico sem oráculo ou o CEGIS
+mudem o quadro qualitativo.
+
+**Problema operacional: 3 das 9 chaves foram rejeitadas pela API** (`key4`, `key7`,
+`key8` — `REJECTED by the API`, 0 chamadas cada) e uma quarta (`key5`) esgotou a cota do
+modelo após só 8 chamadas. Das 9, apenas 5 contribuíram de fato (`key1`, `key2`,
+`key3`, `key6`, `key9`, 133 chamadas cada). Isso não afetou a corretude da rodada — o
+pool falha para a próxima chave automaticamente — mas reduz a capacidade real para
+~5/9 do nominal. Antes de uma rodada em escala 270 (que custaria até ~7.560 requisições
+em `--mode all`, contra 1.400 da rodada oficial de 2 condições), vale conferir se as
+chaves rejeitadas pertencem a um projeto sem free tier ou têm algum problema de
+cadastro — ver `docs/usage.md` §5.
+
+**Decisão pendente.** Os dados de calibração não mostram nenhum sinal (nem positivo nem
+claramente negativo) forte o bastante para decidir sozinho se vale estender para 270
+tarefas — essa é uma escolha de custo/tempo do projeto, não uma conclusão que os dados
+imponham. Ver a pergunta feita ao usuário no acompanhamento desta sessão.

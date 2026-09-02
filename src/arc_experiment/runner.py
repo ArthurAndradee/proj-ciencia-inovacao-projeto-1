@@ -13,6 +13,7 @@ critic only, and never selects the answer.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any
@@ -32,6 +33,28 @@ NO_CODE_FEEDBACK = (
 class Condition(str, Enum):
     SAMPLING = "sampling"
     CRITIC = "critic"
+    CRITIC_NO_ORACLE = "critic_no_oracle"
+    CRITIC_CEGIS = "critic_cegis"
+
+
+@dataclass(frozen=True)
+class CriticSpec:
+    """Everything that varies between critic conditions; the loop stays generic."""
+
+    system_prompt: str
+    request_builder: Callable[[Task, str, str, RunResult], str]
+    prefer_latest: bool = True
+
+
+CRITIC_SPECS: dict[Condition, CriticSpec] = {
+    Condition.CRITIC: CriticSpec(prompts.CRITIC_SYSTEM, prompts.critic_request),
+    Condition.CRITIC_NO_ORACLE: CriticSpec(
+        prompts.CRITIC_NO_ORACLE_SYSTEM, prompts.critic_request_no_oracle
+    ),
+    Condition.CRITIC_CEGIS: CriticSpec(
+        prompts.CRITIC_CEGIS_SYSTEM, prompts.critic_request_cegis
+    ),
+}
 
 
 class StopReason(str, Enum):
@@ -122,10 +145,16 @@ def solve_task(
     """Run one task under one condition within a fixed API-call budget."""
     budget = Budget(limit=budget_calls)
     sampling: bool = condition is Condition.SAMPLING
+    spec: CriticSpec | None = CRITIC_SPECS.get(condition)
     generator = Generator(
         client=client, model=generator_model, budget=budget, temperature=temperature
     )
-    critic = Critic(client=client, model=critic_model, budget=budget)
+    critic = Critic(
+        client=client,
+        model=critic_model,
+        budget=budget,
+        system=spec.system_prompt if spec is not None else prompts.CRITIC_SYSTEM,
+    )
 
     iterations: list[IterationRecord] = []
     best: _Candidate | None = None
@@ -181,7 +210,8 @@ def solve_task(
                 train_correct=result.n_correct,
                 iteration=record.index,
             )
-            if _better(candidate, best, prefer_latest=not sampling):
+            prefer_latest: bool = spec.prefer_latest if spec is not None else False
+            if _better(candidate, best, prefer_latest=prefer_latest):
                 best = candidate
 
             if result.all_correct:
@@ -196,8 +226,9 @@ def solve_task(
             # otherwise the budget would end on feedback nobody can use.
             if not budget.can_afford(2):
                 break
+            assert spec is not None  # only critic conditions reach this branch
             critique: Critique = critic.review(
-                prompts.critic_request(task, proposal.rule, result)
+                spec.request_builder(task, proposal.rule, proposal.code, result)
             )
             record.critic_feedback = critique.feedback
             record.critic_raw = critique.raw

@@ -235,3 +235,122 @@ isoladamente**, como réplica confirmatória, com a direção declarada aqui: es
 **36%** (48 programas consistentes por condição). É baixo: a réplica pode indicar se o
 efeito persiste, mas a ausência de significância nela não será evidência de ausência do
 efeito. Uma confirmação com poder adequado (~70%) exigiria o split inteiro, 400 tarefas.
+
+## 13. Bug do acesso ao código — o Crítico nunca via o candidato, só a regra
+
+**Declarado em 27/08/2026, antes de re-executar a condição `critic`.**
+
+**O bug.** `prompts.critic_request` — a mensagem enviada ao Crítico — nunca incluiu
+`proposal.code`, apenas `proposal.rule` (a regra em linguagem natural) e o relatório de
+execução no treino. O Crítico julgava uma *descrição* do algoritmo, nunca o algoritmo em
+si: não conseguia apontar quando o código diverge da regra enunciada, nem bugs (erro de
+limite, caso de borda) visíveis só no código. A rodada oficial de 270 tarefas
+(seção 12 acima, [results.md](results.md)) foi executada sob esse bug.
+
+**Por que a correção não abre um vazamento novo.** O filtro anti-vazamento
+(`guards.sanitize`, decisão 5) atua sobre a **saída** do Crítico, nunca sobre a entrada.
+Dar o código ao Crítico como entrada não é informação nova nem secreta — é a própria
+saída do Gerador, que o Crítico já tinha meios de reconstruir a partir da regra e do
+relatório de execução, só que de forma indireta e incompleta.
+
+**Consequência para os dados já coletados.** `critic.jsonl` da rodada oficial fica
+desatualizado: o prompt que produziu aqueles dados não é mais o prompt em uso.
+`sampling.jsonl` continua válido — não depende do Crítico — e é reaproveitado sem nova
+execução. A condição `critic` precisa ser re-executada sob o prompt corrigido antes de
+qualquer nova comparação.
+
+**Onde.** `prompts.critic_request` (agora `critic_request(task, rule, code, result)`),
+ponto de chamada em `runner.solve_task`.
+
+## 14. Dois críticos novos: sem oráculo e contraexemplo estruturado (CEGIS)
+
+**Declarado em 27/08/2026, antes de rodar a calibração.**
+
+**Decisão.** Duas condições novas, paralelas e independentes — não um pipeline
+sequencial único — cada uma comparada par a par contra `sampling` e contra `critic`
+(corrigido):
+
+* `critic_no_oracle` — vê os pares de treino, a regra, o código e o relatório de
+  execução no treino, mas **nunca** o gabarito do par de teste. Isola: quanto do efeito
+  de uma crítica estruturada vem só da estrutura, sem informação privilegiada?
+* `critic_cegis` — vê o mesmo que o Crítico original (gabarito do teste incluído), mas
+  em vez de até 150 palavras de prosa livre, devolve um único contraexemplo e uma classe
+  de correção em vocabulário fechado (`MISSING_CASE | WRONG_TRANSFORM | WRONG_GEOMETRY |
+  WRONG_COLOR_MAP | WRONG_SCOPE | OTHER`) — mais próximo de CEGIS (*Counterexample-Guided
+  Inductive Synthesis*). Isola: a forma do feedback (prosa vs. contraexemplo único) muda
+  o resultado, mantendo o mesmo acesso à informação?
+
+**Por quê.** Já registrado como lacuna na seção 11, ameaça #1: *"um crítico sem acesso
+ao gabarito isolaria o valor do feedback em linguagem natural; um oráculo binário
+isolaria a informação da sua forma"*. Duas condições paralelas, cada uma variando um só
+eixo em relação ao Crítico original, respondem a essa lacuna sem confundir as duas
+variáveis numa única condição — o que aconteceria num pipeline sequencial único
+(gerador → crítico sem oráculo → crítico de contraexemplo), avaliado e descartado em
+favor deste desenho por não permitir atribuir o efeito a um mecanismo específico.
+
+**Paridade de orçamento.** Ambas alternam Gerador↔Crítico exatamente como `critic` hoje
+— um `critic.review()` por ciclo de revisão, sujeito ao mesmo `budget.can_afford(2)`. A
+exigência de orçamento ímpar (decisão 6/7) vem desse gate compartilhado, não do tipo de
+crítico, e vale para as três condições de crítico sem alteração.
+
+**Desempate.** `prefer_latest=True` nas três condições de crítico, igual à atual — o
+critério de seleção (`_better`) decide por `train_correct`, contagem objetiva da
+execução, nunca pela opinião do próprio crítico sobre progresso. O que distingue o
+desempate é "essa condição revisa com histórico acumulado" (as três de crítico) vs.
+"essa condição reamostra do zero" (só `sampling`), não qual crítico está em uso.
+
+**Plano de comparações pré-registrado, com correção de Bonferroni.**
+
+| # | Par | Isola |
+|---|-----|-------|
+| 1 | `sampling` vs `critic` | hipótese original, re-testada com o bug corrigido |
+| 2 | `sampling` vs `critic_no_oracle` | valor da crítica estruturada sem oráculo |
+| 3 | `sampling` vs `critic_cegis` | valor do oráculo em forma de contraexemplo único |
+| 4 | `critic` vs `critic_no_oracle` | valor do acesso ao gabarito, mantendo a forma prosa |
+| 5 | `critic` vs `critic_cegis` | valor da forma estruturada, mantendo o acesso ao gabarito |
+
+`critic_no_oracle` vs `critic_cegis` fica fora da família pré-registrada — varia acesso
+ao gabarito e forma do feedback ao mesmo tempo, confundido — e só é reportado como
+exploratório se aparecer. 5 comparações pré-registradas ⇒ **Bonferroni, α = 0,05/5 =
+0,01** por teste. Distinto da correção de Pocock já usada na seção 12: Pocock corrige
+múltiplas *olhadas no tempo* sobre os mesmos dados (100 depois 270 tarefas); Bonferroni
+aqui corrige múltiplas comparações *simultâneas* sobre o mesmo conjunto de dados.
+
+**Escala.** Calibração pequena primeiro (~30-50 tarefas), antes de comprometer a escala
+de 270 usada na rodada oficial — mesmo padrão já seguido em `calibracao.md` antes da
+rodada oficial de 100/270. A decisão de estender fica condicionada ao que a calibração
+mostrar.
+
+**Onde.** `runner.Condition.CRITIC_NO_ORACLE`/`CRITIC_CEGIS`, `runner.CriticSpec`/
+`CRITIC_SPECS`, `prompts.CRITIC_NO_ORACLE_SYSTEM`/`CRITIC_CEGIS_SYSTEM`,
+`prompts.critic_request_no_oracle`/`critic_request_cegis`,
+`report.PRIMARY_COMPARISONS`.
+
+## 15. Bug de encoding — leitura/escrita de texto assumia o encoding da plataforma
+
+**Descoberto em 28/08/2026, ao tentar retomar a rodada de 270 tarefas num ambiente
+Windows.**
+
+**O bug.** `Path.read_text()`, `Path.write_text()` e `open(path, "a")`, em
+`experiment.py`, `cli.py`, `metrics.py`, `dataset.py`, `executor.py` e
+`_sandbox_child.py`, nunca declaravam `encoding="utf-8"` — usavam o encoding padrão da
+plataforma (`locale.getpreferredencoding()`). No macOS onde o projeto foi desenvolvido
+isso é UTF-8 por padrão, então o bug nunca apareceu. No Windows, o padrão é a *code page*
+do sistema (cp1252 em máquinas em português/inglês), que não consegue representar vários
+bytes que aparecem rotineiramente em texto gerado pelo Gemini (travessões, aspas
+tipográficas). O sintoma: `UnicodeDecodeError` ao tentar **retomar** uma rodada (ler de
+volta um `.jsonl` já escrito), o que interrompe a execução antes mesmo de processar a
+primeira tarefa pendente — não é um erro cosmético, impede qualquer rodada real num
+ambiente Windows assim que o conteúdo gerado pelo modelo contém um caractere fora do
+cp1252.
+
+**Por que não é uma mudança de comportamento.** UTF-8 explícito é estritamente mais
+correto do que depender do locale da máquina que roda o comando — é o mesmo texto, só
+decodificado/codificado de um jeito que não depende de em qual sistema operacional o
+comando roda. Arquivos já escritos por uma rodada anterior em UTF-8 (como
+`results/runs/official/*.jsonl`, gerados em macOS) continuam legíveis sem conversão.
+
+**Onde.** Todos os `read_text`/`write_text`/`open` de arquivo texto em
+`src/arc_experiment/` passaram a declarar `encoding="utf-8"` explicitamente. Teste de
+regressão: `test_resuming_a_run_with_non_ascii_output_does_not_crash` em
+`tests/test_experiment.py`.

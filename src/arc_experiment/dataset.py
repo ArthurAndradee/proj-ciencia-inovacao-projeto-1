@@ -36,7 +36,7 @@ def _pairs(raw: list[dict[str, Grid]]) -> list[Pair]:
 
 
 def load_task(path: Path) -> Task:
-    raw: dict[str, Any] = json.loads(path.read_text())
+    raw: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     return Task(task_id=path.stem, train=_pairs(raw["train"]), test=_pairs(raw["test"]))
 
 

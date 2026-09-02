@@ -27,7 +27,15 @@ def parse(argv: list[str]) -> argparse.Namespace:
 def test_modes_map_to_conditions() -> None:
     assert cli.MODES["sampling"] == (Condition.SAMPLING,)
     assert cli.MODES["critic"] == (Condition.CRITIC,)
+    assert cli.MODES["critic-no-oracle"] == (Condition.CRITIC_NO_ORACLE,)
+    assert cli.MODES["critic-cegis"] == (Condition.CRITIC_CEGIS,)
     assert cli.MODES["both"] == (Condition.SAMPLING, Condition.CRITIC)
+    assert cli.MODES["all"] == (
+        Condition.SAMPLING,
+        Condition.CRITIC,
+        Condition.CRITIC_NO_ORACLE,
+        Condition.CRITIC_CEGIS,
+    )
 
 
 def test_pacing_note_reports_the_throttled_wall_time(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -124,6 +132,42 @@ def test_dry_run_writes_results_without_an_api_key(capsys: pytest.CaptureFixture
         ]
         assert [record["task_id"] for record in records] == ["007bbfb7"]
     assert (run_dir / "manifest.json").is_file()
+
+
+def test_dry_run_writes_results_for_all_four_conditions(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code: int = cli.main(
+        ["run", "--task", "007bbfb7", "--mode", "all", "--budget", "3", "--dry-run"]
+    )
+    assert exit_code == 0
+    output: str = capsys.readouterr().out
+
+    run_dir: Path = Config.from_env().results_dir / "runs" / "task-007bbfb7-b3"
+    for condition in cli.MODES["all"]:
+        records = [
+            json.loads(line)
+            for line in (run_dir / f"{condition.value}.jsonl").read_text().splitlines()
+        ]
+        assert [record["task_id"] for record in records] == ["007bbfb7"]
+    # All 5 pre-registered pairs have data with a single dry-run task.
+    assert output.count("Paired comparison") == 5
+
+
+def test_report_rerenders_a_run_started_before_the_new_conditions_existed(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A run that only ever recorded sampling/critic must still report cleanly.
+
+    `render_run`'s default `conditions` is `tuple(Condition)`, now 4-wide; the
+    missing critic_no_oracle/critic_cegis files must not break `command_report`.
+    """
+    cli.main(["run", "--task", "007bbfb7", "--mode", "both", "--budget", "2", "--dry-run"])
+    capsys.readouterr()
+
+    assert cli.main(["report", "--run-id", "task-007bbfb7-b2"]) == 0
+    output: str = capsys.readouterr().out
+    assert "007bbfb7" in output and "sampling" in output and "critic" in output
 
 
 def test_report_rerenders_a_finished_run(capsys: pytest.CaptureFixture[str]) -> None:
