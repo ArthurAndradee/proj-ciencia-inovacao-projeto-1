@@ -1,65 +1,104 @@
 [
   {
     "key": "key1",
-    "calls": 7,
-    "failures": 0,
+    "calls": 271,
+    "failures": 29,
     "rejected": false,
-    "exhausted": []
+    "exhausted": [],
+    "quarantines": 0
   },
   {
     "key": "key2",
-    "calls": 7,
-    "failures": 0,
+    "calls": 270,
+    "failures": 30,
     "rejected": false,
-    "exhausted": []
+    "exhausted": [],
+    "quarantines": 0
   },
   {
     "key": "key3",
-    "calls": 7,
-    "failures": 0,
+    "calls": 59,
+    "failures": 35,
     "rejected": false,
-    "exhausted": []
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 6
   },
   {
     "key": "key4",
-    "calls": 0,
-    "failures": 1,
-    "rejected": true,
-    "exhausted": []
+    "calls": 276,
+    "failures": 24,
+    "rejected": false,
+    "exhausted": [],
+    "quarantines": 1
   },
   {
     "key": "key5",
-    "calls": 7,
-    "failures": 0,
+    "calls": 269,
+    "failures": 31,
     "rejected": false,
-    "exhausted": []
+    "exhausted": [],
+    "quarantines": 2
   },
   {
     "key": "key6",
-    "calls": 7,
-    "failures": 0,
+    "calls": 275,
+    "failures": 25,
     "rejected": false,
-    "exhausted": []
+    "exhausted": [],
+    "quarantines": 0
   },
   {
     "key": "key7",
-    "calls": 0,
-    "failures": 1,
-    "rejected": true,
-    "exhausted": []
+    "calls": 274,
+    "failures": 26,
+    "rejected": false,
+    "exhausted": [],
+    "quarantines": 0
   },
   {
     "key": "key8",
-    "calls": 0,
-    "failures": 1,
-    "rejected": true,
-    "exhausted": []
+    "calls": 268,
+    "failures": 32,
+    "rejected": false,
+    "exhausted": [],
+    "quarantines": 0
   },
   {
     "key": "key9",
-    "calls": 7,
-    "failures": 0,
+    "calls": 21,
+    "failures": 19,
     "rejected": false,
-    "exhausted": []
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 8
+  },
+  {
+    "key": "key10",
+    "calls": 268,
+    "failures": 31,
+    "rejected": false,
+    "exhausted": [],
+    "quarantines": 2
+  },
+  {
+    "key": "key11",
+    "calls": 16,
+    "failures": 15,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 1
+  },
+  {
+    "key": "key12",
+    "calls": 0,
+    "failures": 1,
+    "rejected": true,
+    "exhausted": [],
+    "quarantines": 0
   }
 ]

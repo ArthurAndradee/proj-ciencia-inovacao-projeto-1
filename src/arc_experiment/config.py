@@ -43,6 +43,7 @@ class Config:
     sampling_temperature: float
     max_output_tokens: int
     rpm: int
+    rpm_total: int
     max_retries: int
     request_timeout_s: float
     exec_timeout_s: float
@@ -72,6 +73,7 @@ class Config:
             sampling_temperature=float(os.getenv("SAMPLING_TEMPERATURE", "0.8")),
             max_output_tokens=int(os.getenv("MAX_OUTPUT_TOKENS", "8192")),
             rpm=int(os.getenv("RPM", "0")),
+            rpm_total=int(os.getenv("RPM_TOTAL", "25")),
             max_retries=int(os.getenv("MAX_RETRIES", "5")),
             request_timeout_s=float(os.getenv("REQUEST_TIMEOUT_S", "180")),
             exec_timeout_s=float(os.getenv("EXEC_TIMEOUT_S", "10")),

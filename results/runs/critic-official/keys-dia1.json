@@ -1,0 +1,120 @@
+[
+  {
+    "key": "key1",
+    "calls": 223,
+    "failures": 59,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key2",
+    "calls": 238,
+    "failures": 46,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key3",
+    "calls": 235,
+    "failures": 53,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key4",
+    "calls": 46,
+    "failures": 24,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key5",
+    "calls": 225,
+    "failures": 58,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key6",
+    "calls": 234,
+    "failures": 53,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 1
+  },
+  {
+    "key": "key7",
+    "calls": 213,
+    "failures": 66,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key8",
+    "calls": 239,
+    "failures": 68,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key9",
+    "calls": 214,
+    "failures": 59,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key10",
+    "calls": 217,
+    "failures": 55,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 1
+  },
+  {
+    "key": "key11",
+    "calls": 204,
+    "failures": 70,
+    "rejected": false,
+    "exhausted": [
+      "gemini-3.5-flash-lite"
+    ],
+    "quarantines": 0
+  },
+  {
+    "key": "key12",
+    "calls": 46,
+    "failures": 24,
+    "rejected": true,
+    "exhausted": [],
+    "quarantines": 0
+  }
+]

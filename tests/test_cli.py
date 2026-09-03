@@ -40,26 +40,46 @@ def test_modes_map_to_conditions() -> None:
 
 def test_pacing_note_reports_the_throttled_wall_time(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("RPM", "10")
+    monkeypatch.setenv("RPM_TOTAL", "0")
     monkeypatch.setenv("BUDGET_CALLS", "7")
     # Pinned, or the note would be computed from whatever .env happens to hold
     # and the expected wall time would move with the developer's own key list.
     monkeypatch.setenv("GOOGLE_API_KEYS", "k1")
     note: str = cli.pacing_note(10, Config.from_env())
     # A floor, explicitly: model latency is not in it and can dominate.
-    assert "6s between calls" in note and "at least ~7 min" in note
+    assert "10 rpm on each of 1 key(s)" in note and "at least ~7 min" in note
     assert "latency adds on top" in note
 
 
-def test_pacing_note_divides_the_floor_among_the_keys(
+def test_pacing_note_does_not_divide_a_pool_wide_cap_among_the_keys(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The throttle is per key, so N keys wait N times less in total."""
+    """`--rpm-total` caps the pool as one, so more keys buy no extra rate.
+
+    The old note divided the floor by the key count, which is right only for a
+    per-key throttle. Carried over to a pool-wide cap it would understate the
+    wall time by the key count — the same arithmetic that let twelve keys ask
+    for twelve times the sustainable rate.
+    """
+    monkeypatch.setenv("RPM_TOTAL", "25")
+    monkeypatch.setenv("BUDGET_CALLS", "7")
+    monkeypatch.setenv("GOOGLE_API_KEYS", "k1,k2,k3,k4,k5,k6,k7")
+    note: str = cli.pacing_note(100, Config.from_env())
+    assert "25 rpm across the whole pool" in note
+    assert "at least ~28 min" in note  # 700 chamadas a 25/min, sem dividir por 7
+
+
+def test_a_per_key_throttle_still_multiplies_with_the_keys(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With no pool-wide cap the old semantics stand, and the note says so."""
     monkeypatch.setenv("RPM", "10")
+    monkeypatch.setenv("RPM_TOTAL", "0")
     monkeypatch.setenv("BUDGET_CALLS", "7")
     monkeypatch.setenv("GOOGLE_API_KEYS", "k1,k2,k3,k4,k5,k6,k7")
     note: str = cli.pacing_note(10, Config.from_env())
-    assert "on each of 7 key(s)" in note
-    assert "at least ~1 min" in note  # seven times less than the single-key floor
+    assert "10 rpm on each of 7 key(s)" in note
+    assert "at least ~1 min" in note
 
 
 def test_task_and_sample_are_mutually_exclusive() -> None:
@@ -202,3 +222,36 @@ def test_tasks_lists_the_sampled_ids(capsys: pytest.CaptureFixture[str]) -> None
     output: str = capsys.readouterr().out
     assert "3 task(s)" in output
     assert len([line for line in output.splitlines() if line.startswith("  ")]) == 3
+
+
+def test_rpm_total_override_reaches_the_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RPM_TOTAL", "25")
+    config: Config = cli.config_from_args(
+        parse(["run", "--sample", "3", "--rpm-total", "12"])
+    )
+    assert config.rpm_total == 12
+
+
+def test_a_pool_wide_cap_replaces_the_per_key_limiter() -> None:
+    """One limiter shared by every client, or the cap is per key by another name.
+
+    This is the bug the flag exists to fix: with a limiter each, N keys
+    authorise N times the rate, and twelve of them asked for 360 rpm where the
+    service tolerated about 30.
+    """
+    from arc_experiment.keypool import PooledClient
+
+    pool = PooledClient.from_keys(api_keys=("a", "b", "c"), rpm=30, rpm_total=25)
+    limiters = {id(getattr(k.client, "_limiter")) for k in pool._keys}
+    assert len(limiters) == 1
+    assert next(iter(pool._keys)).client._limiter.rpm == 25  # type: ignore[attr-defined]
+
+
+def test_without_a_pool_cap_each_key_keeps_its_own_limiter() -> None:
+    from arc_experiment.keypool import PooledClient
+
+    pool = PooledClient.from_keys(api_keys=("a", "b", "c"), rpm=30, rpm_total=0)
+    limiters = {id(getattr(k.client, "_limiter")) for k in pool._keys}
+    assert len(limiters) == 3
