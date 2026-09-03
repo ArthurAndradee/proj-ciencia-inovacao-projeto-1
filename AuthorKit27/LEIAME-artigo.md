@@ -49,10 +49,10 @@ Resumo
    3.3 Condições Experimentais       3.7 Protocolo de Análise Estatística
    3.4 Salvaguardas                  3.8 Procedimento Experimental
 4  Resultados
-   4.1 Comparação Principal em Larga Escala
-   4.2 Origem das Vitórias: o Desconto da Primeira Geração
-   4.3 Decomposição Fatorial do Mecanismo
-   4.4 Estabilidade das Estimativas com o Tamanho da Amostra
+   4.1 Comparação Principal sob o Protocolo P1   (Experimento 1: 270 tarefas, 2 condições)
+   4.2 Decomposição Fatorial em Escala           (Experimento 2: 270 tarefas, 4 condições)
+   4.3 A Origem das Vitórias                     (desconto da primeira geração)
+   4.4 Estabilidade das Estimativas              (n = 30, 60, 270)
    4.5 Análise Qualitativa
 5  Discussão
    5.1 Interpretação  5.2 Implicações Práticas  5.3 Limitações e Ameaças
@@ -62,8 +62,16 @@ Reprodutibilidade · Referências
 
 Toda a metodologia está na Seção 3, incluindo a diferença entre os protocolos
 **P1** (Experimento 1, Crítico sem acesso ao código candidato) e **P2**
-(Experimento 2 e piloto, com o código) — declarada como fato metodológico em
-3.8 e como limitação em 5.3, não como narrativa de descoberta.
+(Experimento 2 e pilotos, com o código) — declarada como fato metodológico em
+3.8 e como limitação em 5.3, não como narrativa de descoberta. O confundimento
+temporal (`sampling` coletado em 21/08, condições de crítico em 02–03/09) também
+é declarado nos dois lugares.
+
+O achado central do artigo é o **desconto da primeira geração** (4.3): metade das
+vitórias de qualquer condição vem de uma chamada idêntica entre elas, o
+experimento discrimina em ~1/5 da amostra, e a ordenação entre condições inverte
+quando se desconta essa parcela. Ele replica nos dois experimentos, sob os dois
+protocolos.
 
 ## Atualizar quando os resultados mudarem
 
@@ -79,8 +87,12 @@ mesmas macros — mudar o painel atualiza texto, tabelas e gráficos juntos.
 2. **Vereditos.** As macros `\vereditoUm`, `\vereditoDois` e `\sigMaisProxima`,
    logo abaixo do painel, carregam as afirmações interpretativas curtas reusadas
    no resumo, na introdução e na conclusão.
-3. **Parágrafos de leitura.** Apenas os cinco marcados com `% >>> VEREDITO`
-   (resumo, fim da introdução, 4.1, 4.3, conclusão) afirmam o sinal do resultado.
+3. **Parágrafos de leitura.** Apenas os seis marcados com `% >>> VEREDITO`
+   (resumo, fim da introdução, 4.1, 4.2, 4.3, conclusão) afirmam o sinal do
+   resultado. Os intervalos de confiança da Tabela 7 não vêm de `metrics.py` —
+   o repositório não implementa Wilson. Foram calculados pela Equação 3 do
+   artigo e validados contra o Experimento 1, cujo IC publicado em
+   `docs/results.md` é reproduzido exatamente.
 4. **Título.** O título em uso **afirma o achado**, então precisa mudar se o
    sinal inverter. Quatro alternativas estão comentadas logo acima do `\title`,
    sendo as duas últimas neutras (sobrevivem a uma inversão).
@@ -110,7 +122,12 @@ mesmas macros — mudar o painel atualiza texto, tabelas e gráficos juntos.
   remover a opção `submission`.
 - **Extensão.** 10 páginas. Acima do limite típico de uma submissão AAAI, mas
   provavelmente adequado a uma nota técnica de disciplina. Se precisar cortar, a
-  ordem sugerida é: `tab:inversao` (a Figura 5 já mostra o mesmo), a Seção 4.5
-  (Análise Qualitativa) e a Tabela 1 (cujo conteúdo o texto já descreve).
+  ordem sugerida é: a Seção 4.5 (Análise Qualitativa), a Tabela 1 (cujo conteúdo
+  o texto já descreve) e a Tabela 3 (a família de comparações, também descrita
+  no texto).
+- **`SeedCache` não integrado.** O artigo aponta o *commit* `19e492c` (branch
+  `feat/project-scaffolding`) como a correção escrita e não aplicada para o
+  confundimento dominante. Se ele for integrado e os experimentos refeitos, a
+  Seção 4.3 muda de "limitação com correção conhecida" para resultado.
 - **Uso de IA.** O registro proporcional pendente no `README.md` (§6 da
   especificação) não foi incorporado ao artigo — é autoavaliação da equipe.
