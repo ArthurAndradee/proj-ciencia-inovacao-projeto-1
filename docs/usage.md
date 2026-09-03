@@ -52,7 +52,8 @@ por ciclo de revisão — **o orçamento deve ser ímpar** vale para as três, p
 motivo que já valia para `critic` (ver seção 5 abaixo).
 
 Opções adicionais: `--split`, `--seed`, `--budget`, `--generator-model`,
-`--critic-model`, `--sampling-temperature`, `--rpm`, `--run-id`, `--fresh`, `--quiet`.
+`--critic-model`, `--sampling-temperature`, `--rpm-total`, `--rpm`, `--workers`,
+`--run-id`, `--fresh`, `--quiet`.
 Cada uma sobrepõe o valor correspondente do `.env` apenas naquela execução.
 
 ### Exemplos
@@ -105,23 +106,37 @@ Para descobrir o que sua chave alcança, liste os modelos com
 `client.models.list()` (ver `google-genai`). Evite os aliases `gemini-flash-latest` e
 `gemini-pro-latest` na rodada oficial: eles mudam sozinhos e quebram a reprodutibilidade.
 
-O free tier impõe dois limites diferentes, que exigem tratamentos diferentes:
+O free tier impõe limites de naturezas diferentes, que exigem tratamentos
+diferentes.
 
-**Requisições por minuto (RPM).** Configure `RPM` no `.env` (ou `--rpm N`) com o limite
-exato do seu projeto. O valor **vale por chave**: cada projeto tem seu próprio teto e o
-cliente de cada chave espaça as próprias chamadas. Não confie no painel de limites do
-AI Studio — ele já anunciou 150.000 req/dia onde o limite real era 500. O número
-verdadeiro está no campo `limit:` da mensagem completa do erro 429. Se um 429 ocorrer
-mesmo assim, o cliente respeita o `retryDelay` devolvido pelo servidor, em vez de
-aplicar backoff cego.
+**Taxa agregada (`RPM_TOTAL`).** É o número que importa, e foi medido: com uma chave
+sozinha, 20 chamadas seguidas a 30 req/min passam sem uma recusa; com o pool inteiro
+acima de ~30 req/min **somados**, os 429 aparecem em qualquer chave, de qualquer
+projeto. A taxa de recusa acompanha o total de requisições, não o que cada chave faz.
+Por isso `RPM_TOTAL` limita o pool como um só, e enquanto ele for maior que zero é o
+único limitador em vigor.
 
-**Requisições por dia (RPD).** Não há como esperar dentro de uma execução. Com várias
-chaves, o esgotamento de uma não termina a rodada: aquela chave sai de circulação
-**para aquele modelo** (a cota é por modelo, então ela ainda pode servir outro) e as
-chamadas seguintes vão para as demais. Só quando todas esgotam a rodada para, com
-mensagem explícita e código de saída 2, preservando tudo que já foi gravado. Basta
-repetir o mesmo comando quando as cotas resetarem: a retomada pula as tarefas
-concluídas.
+**Cuidado com `RPM`, que é por chave.** Ele continua disponível (com `RPM_TOTAL=0`),
+mas por ser por chave o teto agregado cresce com o número de chaves: 12 chaves a
+`RPM=30` autorizam **360 req/min**. Foi exatamente assim que uma rodada de 270 tarefas
+morreu depois de uma única tarefa concluída — ~135 requisições em 40 segundos, 38% de
+falha, todas as 12 chaves fora de circulação.
+
+**Recusas transitórias são o regime normal, não a exceção.** Medindo o free tier,
+~4% das chamadas voltam como um `429 RESOURCE_EXHAUSTED` pelado — sem `quotaId`, sem
+`retryDelay`, sem cabeçalho de cota — ou como `503` de modelo sobrecarregado, e a mesma
+chave responde normalmente segundos depois. Não é a sua cota acabando; é o serviço
+descartando carga. O pool trata isso pondo a chave de molho por um tempo crescente
+(30 s, dobrando até 5 min) e devolvendo-a; só depois de seis pausas seguidas sem
+resposta ela é dada como perdida para aquele modelo. Quando *todas* estão de molho, a
+rodada espera a primeira voltar em vez de terminar.
+
+**Requisições por dia (RPD).** Só um 429 que **diga** `per day`, ou que fale em billing,
+é tratado como definitivo — esses não dá para esperar dentro da execução. A chave sai de
+circulação para aquele modelo (a cota é por modelo, então ela ainda pode servir outro) e
+as chamadas seguintes vão para as demais. Só quando todas esgotam a rodada para, com
+código de saída 2, preservando tudo que já foi gravado. Repita o mesmo comando quando as
+cotas resetarem: a retomada pula as tarefas concluídas.
 
 Erros permanentes (chave inválida, requisição malformada) falham de imediato, sem
 consumir tentativas e sem queimar as outras chaves — uma requisição malformada falharia
@@ -129,20 +144,27 @@ igual em todas.
 
 ### Várias chaves
 
-Cada chave vira um cliente próprio, com seu próprio limitador de RPM. As chamadas vão
-sempre para a chave menos usada entre as ainda disponíveis, de modo que as cotas drenam
-parelho em vez de esgotar uma de cada vez.
+As chamadas vão sempre para a chave menos usada entre as disponíveis, de modo que as
+cotas drenam parelho em vez de esgotar uma de cada vez. Com `RPM_TOTAL` em vigor, todas
+partilham **um** limitador: o teto é do pool, e acrescentar chaves não o aumenta.
 
-Por padrão, a rodada usa **um worker por chave** (`--workers N` sobrepõe). Ao final, o
-console mostra e `keys.json` grava quantas chamadas cada chave atendeu e quais
-esgotaram — é o que diz se a rodada parou por cota ou por outro motivo.
+Por padrão, a rodada usa **um worker por chave** (`--workers N` sobrepõe). Como o
+limitador agregado é que dita o ritmo, mais workers só mantêm mais tarefas na fila —
+não aceleram a rodada. Ao final, o console mostra e `keys.json` grava quantas chamadas
+cada chave atendeu, quantas pausas ela tomou (`quarantines`) e quais modelos ficaram
+definitivamente fora (`exhausted`).
 
-Duas advertências:
+Três advertências, todas verificadas na prática:
 
 - a cota é contada **por projeto**, não por chave: várias chaves do mesmo projeto
   compartilham a mesma cota e não somam capacidade nenhuma;
-- o limitador controla RPM, não tokens por minuto. Se aparecerem 429 mesmo com as
-  chaves distribuídas, o teto de TPM é o gargalo — reduza `--workers`.
+- **mesmo com projetos distintos, as chaves não somam taxa.** Foi medido: uma chave
+  sozinha sustenta 30 req/min limpos, mas o pool inteiro começa a levar 429 por volta de
+  30 req/min **somados**, independentemente de como as requisições se distribuem entre as
+  chaves. Mais chaves compram mais cota diária, não mais taxa;
+- **simultaneidade não é o gatilho, taxa é.** A mesma taxa agregada passa igual com 12
+  requisições em voo ou com 3. Se aparecerem 429 em excesso, baixe `--rpm-total`, não
+  `--workers`.
 
 ### Dimensionamento
 
@@ -153,20 +175,21 @@ tarefas × condições × orçamento por tarefa
 ```
 
 A rodada oficial (100 tarefas, duas condições, `BUDGET_CALLS=7`) custa **1.400
-requisições** no teto. A capacidade de um dia é `cota diária por chave × nº de chaves`,
-e a cota real precisa ser lida do campo `limit:` de um erro 429 — nunca do painel.
+requisições** no teto. O tempo, porém, não sai do número de chaves: sai de `RPM_TOTAL`.
+A `arc-exp run` imprime o piso antes de começar.
 
-| Configuração | Requisições | Observação |
+| Configuração | Requisições | Piso a 25 req/min |
 | --- | --- | --- |
-| 100 tarefas, budget 7, `--mode both` | 1.400 | rodada oficial (2 condições) |
-| 50 tarefas, budget 7, `--mode both` | 700 | cabe em menos tempo, com menos poder estatístico |
-| 30 tarefas, budget 7, `--mode all` | 840 | calibração dos críticos novos (4 condições) |
-| 10 tarefas, budget 7, `--mode both` | 140 | verificação de diversidade antes da oficial |
+| 100 tarefas, budget 7, `--mode both` | 1.400 | ~56 min |
+| 50 tarefas, budget 7, `--mode both` | 700 | ~28 min |
+| 270 tarefas, budget 7, `--mode all` (3 críticos) | 5.670 | ~3,8 h |
+| 10 tarefas, budget 7, `--mode both` | 140 | ~6 min |
 
-O número é um teto: tarefas resolvidas cedo gastam menos que o orçamento. Reduzir o
-orçamento por tarefa é preferível a reduzir a amostra — o poder do teste pareado
-depende do número de tarefas (ver decisão 9 em `experimental-decisions.md`), e um
-orçamento menor apenas aperta a competição de forma igual para as duas condições.
+O número é um teto: tarefas resolvidas cedo gastam menos que o orçamento — nas rodadas
+já feitas, as condições de crítico gastaram ~5,5 chamadas das 7. Reduzir o orçamento por
+tarefa é preferível a reduzir a amostra: o poder do teste pareado depende do número de
+tarefas (ver decisão 9 em `experimental-decisions.md`), e um orçamento menor apenas
+aperta a competição de forma igual para as duas condições.
 
 **O orçamento deve ser ímpar.** `critic` alterna Gerador→Crítico→Gerador; com um
 orçamento par, a última chamada só poderia ser uma crítica sem revisão subsequente, e

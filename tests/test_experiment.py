@@ -41,6 +41,7 @@ def make_config(tmp_path: Path) -> Config:
         sampling_temperature=0.8,
         max_output_tokens=256,
         rpm=0,
+        rpm_total=0,
         max_retries=3,
         request_timeout_s=180.0,
         exec_timeout_s=10.0,

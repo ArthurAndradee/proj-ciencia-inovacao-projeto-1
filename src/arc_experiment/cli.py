@@ -83,8 +83,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--rpm",
         type=int,
         metavar="N",
-        help="throttle to N requests per minute PER KEY (0 disables; use your "
-        "free-tier cap, which applies to each key separately)",
+        help="throttle to N requests per minute PER KEY (0 disables). Ignored "
+        "while --rpm-total is in force, which is the default",
+    )
+    run.add_argument(
+        "--rpm-total",
+        type=int,
+        metavar="N",
+        help="throttle the whole pool to N requests per minute (0 disables). "
+        "This is the rate the service actually reacts to: the refusal rate "
+        "tracks the pool, not the individual key",
     )
     run.add_argument("--generator-model")
     run.add_argument("--critic-model")
@@ -139,6 +147,7 @@ def config_from_args(args: argparse.Namespace) -> Config:
         ("generator_model", "generator_model"),
         ("critic_model", "critic_model"),
         ("rpm", "rpm"),
+        ("rpm_total", "rpm_total"),
         ("sampling_temperature", "sampling_temperature"),
     ):
         value = getattr(args, attribute, None)
@@ -183,6 +192,7 @@ def make_client(config: Config, dry_run: bool) -> LLMClient:
         # different quota, while another retry is the same one a moment later.
         max_retries=config.max_retries if len(config.api_keys) == 1 else POOLED_RETRIES,
         rpm=config.rpm,
+        rpm_total=config.rpm_total,
         timeout_s=config.request_timeout_s,
     )
 
@@ -204,17 +214,23 @@ def pacing_note(runs: int, config: Config) -> str:
     fiftyfold. Reporting it as a total once promised 47 minutes for a job of
     31 hours.
 
-    The throttle is per key, so N keys divide the floor by N — counting it once
-    for the whole run would overstate the wait by exactly the factor the extra
-    keys were added to gain.
+    Under `--rpm-total` the cap is the pool's, so the keys do not divide it —
+    they are what the cap is shared between. Dividing by the key count here is
+    exactly the arithmetic that authorised twelve times the sustainable rate.
     """
-    keys: int = max(len(config.api_keys), 1)
-    seconds_per_call: float = 60.0 / config.rpm
-    floor_minutes: float = seconds_per_call * config.budget_calls * runs / 60.0 / keys
+    if config.rpm_total > 0:
+        rate: float = float(config.rpm_total)
+        scope: str = f"{config.rpm_total} rpm across the whole pool"
+    else:
+        keys: int = max(len(config.api_keys), 1)
+        rate = float(config.rpm) * keys
+        scope = f"{config.rpm} rpm on each of {keys} key(s)"
+    calls: int = config.budget_calls * runs
+    floor_minutes: float = calls / rate if rate > 0 else 0.0
     return (
-        f"Throttled to {config.rpm} rpm per key: {seconds_per_call:.0f}s between "
-        f"calls on each of {keys} key(s), so at least ~{floor_minutes:.0f} min — "
-        "model latency adds on top. A line is printed as each task finishes."
+        f"Throttled to {scope}: at most {calls} call(s) at {rate:.0f}/min, "
+        f"so at least ~{floor_minutes:.0f} min — model latency adds on top. "
+        "A line is printed as each task finishes."
     )
 
 
@@ -294,10 +310,14 @@ def command_run(args: argparse.Namespace) -> int:
             workers=workers,
         )
     except QuotaExhausted as exc:
-        print(f"\nDaily quota exhausted: {exc}", file=sys.stderr)
+        # Not necessarily the daily quota: the pool gives up only after every
+        # key has failed through its pauses. Saying "daily" for a run the
+        # service merely throttled sent one diagnosis chasing the wrong thing.
+        print(f"\nNo API key left to serve the run: {exc}", file=sys.stderr)
         print(
-            "Results so far are saved. Re-run the same command once the quota "
-            "resets to continue from where it stopped.",
+            "Results so far are saved. If the keys were refused rather than "
+            "spent, re-running shortly is enough; if a daily quota is gone, "
+            "wait for the reset. Either way the run resumes where it stopped.",
             file=sys.stderr,
         )
         exit_code = 2

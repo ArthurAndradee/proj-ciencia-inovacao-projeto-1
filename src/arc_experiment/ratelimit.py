@@ -27,7 +27,18 @@ _BILLING = re.compile(r"credits?\s+(?:are\s+)?depleted|prepayment|billing", re.I
 
 
 class QuotaExhausted(Exception):
-    """The daily quota is gone; waiting inside this run would be pointless."""
+    """A 429 outlived its retries. `permanent` says whether waiting could help.
+
+    Measured against the free tier, most 429s are transient: the same key,
+    model and payload that is refused now answers a minute later, and roughly
+    4% of calls are refused under any load. Only a 429 that names a per-day
+    quota or a billing problem is beyond waiting out inside a run. Treating
+    every one of them as final retired all twelve keys in forty seconds.
+    """
+
+    def __init__(self, *args: object, permanent: bool = True) -> None:
+        super().__init__(*args)
+        self.permanent: bool = permanent
 
 
 class PermanentAPIError(Exception):
@@ -73,6 +84,17 @@ def quota_exhaustion_reason(exc: BaseException) -> str | None:
     if _DAILY_QUOTA.search(message):
         return "the API kept refusing with 429: daily quota exhausted"
     return "the API kept refusing with 429 (rate limited)"
+
+
+def quota_is_permanent(exc: BaseException) -> bool:
+    """True only when the 429 names a per-day quota or a billing problem.
+
+    A bare `RESOURCE_EXHAUSTED` — no `quotaId`, no `retryDelay`, no quota
+    headers — is the shape the free tier uses to shed load, not the shape it
+    uses to report a spent allowance. It must not end a run.
+    """
+    message: str = str(exc)
+    return bool(_DAILY_QUOTA.search(message) or _BILLING.search(message))
 
 
 _KEY_FAULT = re.compile(

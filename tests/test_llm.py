@@ -229,3 +229,29 @@ def test_giving_up_after_max_retries() -> None:
     with pytest.raises(RuntimeError, match="after 3 attempts"):
         ask(client)
     assert slept == [4.0, 8.0]
+
+
+BARE_429: str = (
+    "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': "
+    "'Resource has been exhausted (e.g. check quota).', 'status': 'RESOURCE_EXHAUSTED'}}"
+)
+
+
+def test_a_bare_429_is_reported_as_transient() -> None:
+    """No quotaId, no retryDelay, no per-day wording: this is load shedding.
+
+    Measured against the free tier, ~4% of calls come back this way under any
+    rate, and the same key answers moments later. Marking it permanent is what
+    let the pool write off every key in a single minute.
+    """
+    client, _ = gemini_with([Exception(BARE_429)] * 3, max_retries=3)
+    with pytest.raises(QuotaExhausted) as excinfo:
+        ask(client)
+    assert excinfo.value.permanent is False
+
+
+def test_a_per_day_429_is_still_reported_as_permanent() -> None:
+    client, _ = gemini_with([Exception(PER_DAY_429)] * 3, max_retries=3)
+    with pytest.raises(QuotaExhausted) as excinfo:
+        ask(client)
+    assert excinfo.value.permanent is True

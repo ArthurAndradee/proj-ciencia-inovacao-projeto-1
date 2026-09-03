@@ -175,7 +175,10 @@ class GeminiClient:
         if last_error is not None:
             reason: str | None = ratelimit.quota_exhaustion_reason(last_error)
             if reason is not None:
-                raise ratelimit.QuotaExhausted(f"{model}: {reason}") from last_error
+                raise ratelimit.QuotaExhausted(
+                    f"{model}: {reason}",
+                    permanent=ratelimit.quota_is_permanent(last_error),
+                ) from last_error
         raise RuntimeError(f"API call failed after {self.max_retries} attempts: {last_error}")
 
     MAX_BACKOFF_S: float = 300.0

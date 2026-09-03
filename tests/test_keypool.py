@@ -154,6 +154,7 @@ def test_usage_reports_calls_apart_from_failures() -> None:
         "failures": 1,
         "rejected": False,
         "exhausted": ["flash"],
+        "quarantines": 0,
     }
     assert usage["key2"]["calls"] == 2
     assert usage["key2"]["exhausted"] == []
@@ -213,3 +214,98 @@ def test_every_key_rejected_gives_a_clear_error() -> None:
     with pytest.raises(QuotaExhausted) as excinfo:
         generate(pool)
     assert "rejected" in str(excinfo.value)
+
+
+class FakeClock:
+    """Monotonic time the test advances by hand, plus the sleeps it was asked for."""
+
+    def __init__(self) -> None:
+        self.now: float = 1000.0
+        self.slept: list[float] = []
+
+    def __call__(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.slept.append(seconds)
+        self.now += seconds
+
+
+class FlakyClient(FakeKeyClient):
+    """Refuses the first `refusals` calls the way the free tier sheds load."""
+
+    def __init__(self, name: str, refusals: int) -> None:
+        super().__init__(name)
+        self.remaining: int = refusals
+
+    def generate(
+        self,
+        model: str,
+        system: str,
+        messages: list[Message],
+        temperature: float | None = None,
+    ) -> Completion:
+        self.calls.append(model)
+        if self.remaining > 0:
+            self.remaining -= 1
+            raise QuotaExhausted(f"{model}: 429 (rate limited)", permanent=False)
+        return Completion(text=f"answer from {self.name}")
+
+
+def test_a_transient_refusal_rests_the_key_instead_of_retiring_it() -> None:
+    """A bare 429 is this minute's problem, not the day's.
+
+    Retiring on it is what killed a real run: every key was written off in
+    forty seconds over refusals each of which cleared on its own.
+    """
+    clock = FakeClock()
+    flaky = FlakyClient("flaky", refusals=1)
+    healthy = FakeKeyClient("healthy")
+    pool = PooledClient([flaky, healthy], sleep=clock.sleep, clock=clock)
+
+    assert generate(pool) == "answer from healthy"
+    assert pool.usage()[0]["exhausted"] == []       # não aposentada
+    assert pool.usage()[0]["quarantines"] == 1
+
+    # Passado o descanso, ela volta a ser escolhida e responde.
+    clock.now += 60.0
+    assert generate(pool) == "answer from flaky"
+    assert pool.usage()[0]["quarantines"] == 0      # o sucesso zera a sequência
+
+
+def test_the_pool_waits_when_every_key_is_resting() -> None:
+    """All keys down for a minute must slow the run, not end it."""
+    clock = FakeClock()
+    keys = [FlakyClient(f"k{i}", refusals=1) for i in range(3)]
+    pool = PooledClient(keys, sleep=clock.sleep, clock=clock)
+
+    assert generate(pool).startswith("answer from")
+    assert clock.slept, "the pool should have waited for a key to come back"
+    assert all(entry["exhausted"] == [] for entry in pool.usage())
+
+
+def test_a_key_that_never_recovers_is_finally_retired() -> None:
+    """The pause must not become an infinite loop against a dead key."""
+    clock = FakeClock()
+    doomed = FlakyClient("doomed", refusals=99)
+    healthy = FakeKeyClient("healthy")
+    pool = PooledClient([doomed, healthy], sleep=clock.sleep, clock=clock)
+
+    for _ in range(40):
+        clock.now += 600.0          # sempre além do descanso
+        generate(pool)
+
+    assert pool.usage()[0]["exhausted"] == ["flash"]
+    assert doomed.calls, "it should have been retried before being written off"
+
+
+def test_a_per_day_refusal_still_retires_at_once() -> None:
+    """The distinction must not soften the case it was always right about."""
+    clock = FakeClock()
+    spent = FakeKeyClient("spent", exhausted_for={"flash"})
+    healthy = FakeKeyClient("healthy")
+    pool = PooledClient([spent, healthy], sleep=clock.sleep, clock=clock)
+
+    assert generate(pool) == "answer from healthy"
+    assert pool.usage()[0]["exhausted"] == ["flash"]
+    assert not clock.slept, "a spent daily quota is not something to wait out"
