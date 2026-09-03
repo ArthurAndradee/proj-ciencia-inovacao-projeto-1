@@ -8,6 +8,131 @@ rodadas de calibração em [calibracao.md](calibracao.md).
 
 ---
 
+# Parte C — as quatro condições em escala
+
+**270 tarefas do ARC-AGI-1 · `gemini-3.5-flash-lite` · 02–03/09/2026 · commit `14ed956`**
+
+> **Resultado nulo, bem medido.** Nenhuma das 5 comparações pré-registradas é significativa,
+> nem sob Bonferroni (α = 0,01) nem a α = 0,05 sem correção — o menor p é 0,0789. A conclusão
+> que o experimento sustenta não é sobre qual estratégia vence, e sim sobre **quanto de uma
+> comparação entre arquiteturas de agentes é atribuível à arquitetura**: cerca de metade das
+> vitórias de qualquer condição vem da primeira geração, que é idêntica entre elas.
+
+## C.1 O que esta parte tem que a Parte A não tinha
+
+A Parte A rodou as mesmas quatro condições em 60 tarefas e declarou a escala como limitação.
+Esta é a extensão para as 270 da Parte B, com o crítico corrigido (§13) e os dois críticos
+novos (§14). Todas as três condições de crítico foram **re-executadas do zero** — os 60
+resultados anteriores foram descartados para que as 270 saíssem do mesmo código, na mesma
+máquina, com o mesmo modelo. `sampling` é reaproveitado da Parte B, sem re-execução
+(ver limitação 5 abaixo).
+
+## C.2 Resultados
+
+| Condição | Resolvidas | Acurácia | Consist. treino | Programas/tarefa | Tokens/tarefa |
+| --- | --- | --- | --- | --- | --- |
+| `critic` | 93/270 | **34,4%** | 35,6% | 3,23 | 48,1 k |
+| `sampling` | 88/270 | 32,6% | 35,6% | 5,43 | 28,0 k |
+| `critic_cegis` | 83/270 | 30,7% | 34,8% | 3,34 | 48,8 k |
+| `critic_no_oracle` | 80/270 | 29,6% | 33,3% | 3,27 | 45,8 k |
+
+Nenhum vazamento em 810 execuções de crítico, nenhum erro de API, 13 respostas truncadas.
+
+## C.3 As cinco comparações pré-registradas
+
+| Par | Discordantes | Ganho líquido | McNemar exato | Significativo (α = 0,01)? |
+| --- | --- | --- | --- | --- |
+| `sampling` × `critic` | 51 (23×28) | +5 (+1,9 pp) | 0,5758 | não |
+| `sampling` × `critic_no_oracle` | 54 (31×23) | −8 (−3,0 pp) | 0,3409 | não |
+| `sampling` × `critic_cegis` | 47 (26×21) | −5 (−1,9 pp) | 0,5601 | não |
+| `critic` × `critic_no_oracle` | 47 (30×17) | −13 (−4,8 pp) | **0,0789** | não |
+| `critic` × `critic_cegis` | 54 (32×22) | −10 (−3,7 pp) | 0,2203 | não |
+
+**Nenhuma sobrevive.** Nem sequer a α = 0,05 isolado.
+
+Vale registrar um erro de projeção cometido durante a coleta: sobre as primeiras 91 tarefas,
+`critic` × `critic_no_oracle` estava em p = 0,1153, e extrapolar aquelas proporções para 270
+dava p = 0,0027 — o que teria atravessado a correção. Fechou em 0,0789. A vantagem do
+`critic` sobre `sampling`, que aparecia como +6,6 pp, encolheu para +1,9 pp. Extrapolação de
+análise interina não é previsão.
+
+## C.4 Exploratório: metade das vitórias não pertence a nenhuma estratégia
+
+**Não pré-registrado.** A primeira geração é idêntica nas quatro condições — mesmo prompt,
+histórico vazio, nenhum crítico envolvido ainda; só a temperatura difere (0,8 em `sampling`,
+0,2 nas demais). Vitórias decididas ali não distinguem estratégia alguma.
+
+| Condição | Resolvidas | Na 1ª geração | Atribuíveis ao ciclo |
+| --- | --- | --- | --- |
+| `sampling` | 88 | 45 | 43 |
+| `critic` | 93 | 44 | **49** |
+| `critic_no_oracle` | 80 | 35 | 45 |
+| `critic_cegis` | 83 | 32 | **51** |
+
+Restringindo cada par às tarefas que a primeira geração não resolveu em nenhuma das duas
+condições, todos os cinco p-valores ficam entre 0,296 e 1,000:
+
+| Par | n | Líquido | p |
+| --- | --- | --- | --- |
+| `sampling` × `critic` | 207 | +7 | 0,3105 |
+| `sampling` × `critic_no_oracle` | 212 | +1 | 1,0000 |
+| `sampling` × `critic_cegis` | 216 | +3 | 0,7201 |
+| `critic` × `critic_no_oracle` | 214 | −7 | 0,2962 |
+| `critic` × `critic_cegis` | 216 | −4 | 0,6177 |
+
+Duas leituras saem daí. A primeira: **o experimento discrimina de fato em cerca de um quinto
+da própria amostra** — o resto é decidido antes de qualquer estratégia agir, ou por nenhuma.
+A segunda: descontada a loteria, as três condições de crítico ficam *acima* de `sampling` em
+vitórias do ciclo (51, 49, 45 contra 43), ordenação que o número bruto esconde. As diferenças
+são pequenas e nenhuma é significativa, mas a direção inverte conforme se olhe o total ou o
+atribuível.
+
+**A correção existe e não foi usada.** O commit `19e492c` (branch `feat/project-scaffolding`,
+15/08) implementa um `SeedCache`: a primeira condição a chegar numa tarefa grava a primeira
+geração e as demais a repetem, com a repetição ainda cobrada do orçamento. Nunca foi mergeado
+— nem a Parte B, nem a A, nem esta o usaram. Uma réplica confirmatória deveria exigi-lo: além
+de eliminar o confundimento, corta `(condições − 1) × tarefas` chamadas por bloco, 810 num
+bloco de quatro condições.
+
+## C.5 O que o Crítico faz, e o que não faz
+
+Ele cumpre o mecanismo: produz **3,23 programas por tarefa contra 5,43** da amostragem — 40% a
+menos — com a **mesma** consistência de treino (35,6% nos dois). Converte orçamento em revisão
+com eficiência real. O que não acontece é a conversão disso em acurácia no teste.
+
+`critic_no_oracle` é a condição mais fraca das quatro em acurácia bruta (29,6%). É também a
+única que descreve um sistema executável sem gabarito. Lido junto com C.4, o quadro é que
+crítica estruturada sem informação privilegiada não compra nada mensurável nesta escala.
+
+## C.6 Limitações
+
+1. **Metade do resultado vem de uma chamada comum às condições** (C.4). É a limitação
+   dominante, e tem correção escrita e não aplicada.
+2. **O orçamento é medido em chamadas, não em tokens.** As condições de crítico consomem 45–49 k
+   tokens por tarefa contra 28 k da amostragem — 63% a 74% mais. Sob orçamento em tokens, o
+   sinal poderia inverter.
+3. **Os oráculos não são autônomos.** `critic` e `critic_cegis` consultam o gabarito do teste
+   durante o laço; medem o valor da validação por oposição, não um método implantável.
+4. **Uma execução por tarefa.** Parte da variação é ruído do modelo; o pareamento mitiga, não
+   elimina.
+5. **`sampling` foi coletado em 21/08 e os críticos em 02–03/09.** O modelo é hospedado e pode
+   ter mudado do lado do servidor no intervalo. Nenhum digest de prompt captura isso; os pares
+   1, 2 e 3 carregam esse confundimento, os pares 4 e 5 não.
+6. **Análises interinas foram feitas durante a coleta**, o que infla o erro tipo I. Os p-valores
+   acima são os da análise pré-registrada sobre o conjunto fechado, mas o histórico de espiadas
+   está registrado por honestidade.
+
+<sub>810 execuções de crítico em dois dias · 4.601 chamadas · 11 chaves úteis (uma 12ª respondeu
+401 e foi descartada) · a cota real medida foi ~230 chamadas por chave por dia, não as 500
+anunciadas pelo painel · dia 1 parou em 411/810 com as 11 chaves esgotadas.</sub>
+
+```bash
+uv run arc-exp run --sample 270 --mode all --budget 7 \
+  --split evaluation --seed 20260814 --run-id critic-official
+```
+
+---
+
 # Parte A — Crítico corrigido + dois críticos novos
 
 **60 tarefas do ARC-AGI-1 · `gemini-3.5-flash-lite` · 28/08/2026 · commit `d8e57e3`**
@@ -116,6 +241,11 @@ não se traduziu em vantagem de acurácia nesta amostra.
 uv run arc-exp run --tasks-file results/runs/critic-official/task-list-60.txt \
   --mode all --budget 7 --run-id critic-official
 ```
+
+> Os `.jsonl` brutos desta parte não estão mais no diretório: ele foi reutilizado pela Parte C,
+> que re-executou as três condições de crítico nas 270 tarefas. Os resultados das 60 seguem
+> recuperáveis no commit `857aa6b`, e `manifest-60.json`/`keys-60.json` preservam o manifesto e
+> a contabilidade de chaves daquela rodada.
 
 ---
 
