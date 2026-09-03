@@ -49,16 +49,34 @@ Resumo
    3.3 Condições Experimentais       3.7 Protocolo de Análise Estatística
    3.4 Salvaguardas                  3.8 Procedimento Experimental
 4  Resultados
-   4.1 Comparação Principal sob o Protocolo P1   (Experimento 1: 270 tarefas, 2 condições)
-   4.2 Decomposição Fatorial em Escala           (Experimento 2: 270 tarefas, 4 condições)
-   4.3 A Origem das Vitórias                     (desconto da primeira geração)
-   4.4 Estabilidade das Estimativas              (n = 30, 60, 270)
-   4.5 Análise Qualitativa
+   4.1 Decomposição Fatorial em Escala   (270 tarefas, 4 condições — resultado principal)
+   4.2 A Origem das Vitórias             (desconto da primeira geração + réplica sob P1)
+   4.3 Estabilidade das Estimativas      (subamostragem das próprias 270)
+   4.4 Evidência Qualitativa do Mecanismo
 5  Discussão
    5.1 Interpretação  5.2 Implicações Práticas  5.3 Limitações e Ameaças
 6  Conclusão
 Reprodutibilidade · Referências
+Apêndice A: Execução e Histórico   (removível — ver abaixo)
 ```
+
+## As duas versões: disciplina e conferência
+
+O material de processo — a medição sob o protocolo P1, as duas versões do prompt
+do Crítico, as notas de execução (chamadas, chaves, cota), o *cache* de semente
+não integrado e as execuções-piloto — está todo no **Apêndice A**, fora do corpo.
+Um interruptor no preâmbulo decide se ele sai impresso:
+
+```latex
+\apendicetrue    % entrega de disciplina — 11 páginas
+\apendicefalse   % submissão a conferência — 10 páginas
+```
+
+Troque **apenas a linha sem comentário** (as outras duas ocorrências de
+`\apendicetrue` no arquivo são texto de comentário). As menções ao apêndice no
+corpo usam `\vejaApendice{...}`, que desaparece junto — não sobra referência
+quebrada. Ambos os modos foram compilados e verificados: 0 erros, 0
+`Overfull \hbox`, 0 avisos.
 
 Toda a metodologia está na Seção 3, incluindo a diferença entre os protocolos
 **P1** (Experimento 1, Crítico sem acesso ao código candidato) e **P2**
@@ -87,12 +105,17 @@ mesmas macros — mudar o painel atualiza texto, tabelas e gráficos juntos.
 2. **Vereditos.** As macros `\vereditoUm`, `\vereditoDois` e `\sigMaisProxima`,
    logo abaixo do painel, carregam as afirmações interpretativas curtas reusadas
    no resumo, na introdução e na conclusão.
-3. **Parágrafos de leitura.** Apenas os seis marcados com `% >>> VEREDITO`
-   (resumo, fim da introdução, 4.1, 4.2, 4.3, conclusão) afirmam o sinal do
-   resultado. Os intervalos de confiança da Tabela 7 não vêm de `metrics.py` —
-   o repositório não implementa Wilson. Foram calculados pela Equação 3 do
-   artigo e validados contra o Experimento 1, cujo IC publicado em
-   `docs/results.md` é reproduzido exatamente.
+3. **Parágrafos de leitura.** Apenas os cinco marcados com `% >>> VEREDITO`
+   (resumo, fim da introdução, 4.1, 4.2, conclusão) afirmam o sinal do resultado.
+4. **Números que não vêm do repositório.** Dois blocos foram calculados fora do
+   código do projeto e precisam ser refeitos se os dados mudarem:
+   - Os **intervalos de confiança** (Tabela 2): `metrics.py` não implementa
+     Wilson. Calculados pela Equação 3 do artigo e validados contra a medição sob
+     P1, cujo IC publicado em `docs/results.md` é reproduzido exatamente.
+   - A **análise de estabilidade** (Figura 5): subamostragem sem reposição das
+     próprias 270 tarefas, 20.000 repetições por tamanho, preservando o
+     pareamento. Substituiu uma versão que usava os pilotos históricos de 30 e 60
+     tarefas — um deles descartado e refeito, o que os torna evidência frágil.
 4. **Título.** O título em uso **afirma o achado**, então precisa mudar se o
    sinal inverter. Quatro alternativas estão comentadas logo acima do `\title`,
    sendo as duas últimas neutras (sobrevivem a uma inversão).

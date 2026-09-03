@@ -128,8 +128,8 @@ for macro in ("vereditoUm", "vereditoDois"):
             erro(f"\\{macro} (começa em minúscula) inicia frase após "
                  f"'{m.group(1)}' no corpo, linha ~{linha}")
 n_veredito = CORPO.count("% >>> VEREDITO")
-if n_veredito != 6:
-    erro(f"esperava 6 marcas '% >>> VEREDITO' no corpo, encontrei {n_veredito}")
+if n_veredito != 5:
+    erro(f"esperava 5 marcas '% >>> VEREDITO' no corpo, encontrei {n_veredito}")
 
 # ---------------------------------------------------------------- saída -----
 if problemas:

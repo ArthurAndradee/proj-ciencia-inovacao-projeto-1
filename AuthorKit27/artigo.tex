@@ -79,6 +79,16 @@
 
 \setcounter{secnumdepth}{2}
 
+% APÊNDICE — material de execução e histórico do projeto.
+%   \apendicetrue   entrega de disciplina: o histórico conta a favor
+%   \apendicefalse  submissão a conferência: só o corpo, ~2 páginas a menos
+% Rode check_artigo.py depois de trocar.
+\newif\ifapendice
+\apendicetrue
+% Referência ao apêndice que desaparece junto com ele. O apêndice usa
+% \section*, que não incrementa contador, então \ref não serve aqui.
+\newcommand{\vejaApendice}[1]{\ifapendice\ (Apêndice~A.#1)\fi}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  PAINEL DE RESULTADOS — a única região do arquivo que precisa mudar quando
 %  uma rodada nova for executada.
@@ -125,10 +135,10 @@
 \newcommand{\An}{270}
 \newcommand{\Adata}{02--03/09/2026}
 \newcommand{\AcommitID}{\texttt{14ed956}}
-\newcommand{\AsampRes}{88} \newcommand{\AsampAcc}{32{,}6} \newcommand{\AsampAccN}{32.6}
-\newcommand{\AcritRes}{93} \newcommand{\AcritAcc}{34{,}4} \newcommand{\AcritAccN}{34.4}
-\newcommand{\AnoorRes}{80} \newcommand{\AnoorAcc}{29{,}6} \newcommand{\AnoorAccN}{29.6}
-\newcommand{\AcegisRes}{83}\newcommand{\AcegisAcc}{30{,}7} \newcommand{\AcegisAccN}{30.7}
+\newcommand{\AsampRes}{88} \newcommand{\AsampAcc}{32{,}6}
+\newcommand{\AcritRes}{93} \newcommand{\AcritAcc}{34{,}4}
+\newcommand{\AnoorRes}{80} \newcommand{\AnoorAcc}{29{,}6}
+\newcommand{\AcegisRes}{83}\newcommand{\AcegisAcc}{30{,}7}
 \newcommand{\AsampTreino}{35{,}6} \newcommand{\AcritTreino}{35{,}6}
 \newcommand{\AnoorTreino}{33{,}3} \newcommand{\AcegisTreino}{34{,}8}
 \newcommand{\AsampProg}{5{,}43} \newcommand{\AcritProg}{3{,}23}
@@ -178,17 +188,25 @@
 \newcommand{\ProjPextrapolado}{0{,}0027} \newcommand{\ProjPfinal}{0{,}0789}
 \newcommand{\ProjDeltaInterino}{\mbox{$+$6{,}6}} \newcommand{\ProjDeltaFinal}{\mbox{$+$1{,}9}}
 
-% ---- ESTUDOS PILOTO: mesmas quatro condições em escalas menores -------------
-\newcommand{\Kn}{30}
-\newcommand{\KsampAcc}{36{,}7} \newcommand{\KsampAccN}{36.7}
-\newcommand{\KcritAcc}{23{,}3} \newcommand{\KcritAccN}{23.3}
-\newcommand{\KnoorAccN}{26.7}
-\newcommand{\KcegisAcc}{20{,}0} \newcommand{\KcegisAccN}{20.0}
-\newcommand{\Pn}{60}
-\newcommand{\PsampAcc}{31{,}7} \newcommand{\PsampAccN}{31.7}
-\newcommand{\PcritAcc}{38{,}3} \newcommand{\PcritAccN}{38.3}
-\newcommand{\PnoorAccN}{28.3}
-\newcommand{\PcegisAccN}{26.7}
+% ---- ESTABILIDADE: subamostragem sem reposição do conjunto fechado de 270 ---
+% Gerado por scripts/reamostragem.py sobre results/runs/critic-official/.
+% Preserva o pareamento: as quatro condições são avaliadas no mesmo subconjunto.
+\newcommand{\SubRep}{20.000}
+\newcommand{\SubNa}{30} \newcommand{\SubNb}{60}
+% P(direção critic > sampling preservada)
+\newcommand{\SubDirA}{51} \newcommand{\SubDirAN}{51.4}
+\newcommand{\SubDirB}{58} \newcommand{\SubDirBN}{58.2}
+\newcommand{\SubDirCN}{62.9} \newcommand{\SubDirDN}{71.1} \newcommand{\SubDirEN}{79.9}
+% P(ordenação completa das quatro condições preservada)
+\newcommand{\SubOrdA}{8}  \newcommand{\SubOrdAN}{7.7}
+\newcommand{\SubOrdB}{12} \newcommand{\SubOrdBN}{11.6}
+\newcommand{\SubOrdCN}{17.4} \newcommand{\SubOrdDN}{27.2} \newcommand{\SubOrdEN}{41.6}
+% banda de 5 a 95% da diferença de acurácia critic - sampling
+\newcommand{\SubBandaAlo}{\mbox{$-$10{,}0}} \newcommand{\SubBandaAhi}{\mbox{$+$13{,}3}}
+\newcommand{\SubBandaBlo}{\mbox{$-$6{,}7}}  \newcommand{\SubBandaBhi}{\mbox{$+$10{,}0}}
+% pilotos históricos, usados apenas como verificação no apêndice
+\newcommand{\Kn}{30} \newcommand{\KdifObs}{\mbox{$-$13{,}4}}
+\newcommand{\Pn}{60} \newcommand{\PdifObs}{\mbox{$+$6{,}6}}
 
 % ---- Seleção de modelo ------------------------------------------------------
 \newcommand{\MforteAcc}{$\sim$90} \newcommand{\MforteDisc}{$\sim$0}
@@ -348,9 +366,9 @@ honesto que ambas as estratégias podem usar sem tocar no gabarito. E o
   decisão diversificar \emph{vs.}\ iterar de confundimentos de recursos, com
   salvaguardas explícitas e auditáveis contra contaminação pelo oráculo
   (Seções~\ref{sec:metodo} e~\ref{sec:salvaguardas}).
-  \item Um resultado nulo com limite superior estreito em \Bn{} tarefas: não
+  \item Um resultado nulo com limite superior estreito em \An{} tarefas: não
   apenas a ausência de efeito detectado, mas a delimitação de qualquer efeito a
-  menos de \BicAltoAbs~pp (Seção~\ref{sec:exp1}).
+  menos de \BicAltoAbs~pp (Seção~\ref{sec:primeirageracao}).
   \item Uma decomposição fatorial do mecanismo em dois eixos — acesso ao oráculo
   e forma do feedback — executada nas mesmas \An{} tarefas, com uma família de
   \numComparacoes{} comparações pré-registradas sob correção de Bonferroni
@@ -784,121 +802,34 @@ concederia à outra condição um par discordante que ela não obteve.
 \subsection{Procedimento Experimental}
 \label{sec:procedimento}
 
-Reportamos dois experimentos em escala plena e dois estudos piloto, todos sobre
-\divisao{} com a mesma semente \semente{} e $B = \orcamento$, sob as condições da
-Seção~\ref{sec:condicoes} e o protocolo de análise da Seção~\ref{sec:analise}.
+Todas as condições são avaliadas nas mesmas \An{} tarefas sorteadas de
+\divisao{} com semente \semente{} e $B = \orcamento$, sob o protocolo de análise
+da Seção~\ref{sec:analise}. A medição principal executa as quatro condições da
+Seção~\ref{sec:condicoes} sobre esse conjunto (\Adata{}, \emph{commit}
+\AcommitID{}). Uma medição anterior, restrita a \texttt{sampling} e
+\texttt{critic} e realizada sobre as mesmas tarefas (\Bdata{}, \emph{commit}
+\BcommitID{}), testa a hipótese original isoladamente e é usada como réplica
+independente na Seção~\ref{sec:primeirageracao}.
 
-\textbf{Experimento~1} avalia a hipótese principal (Equação~\ref{eq:delta}) em
-\Bn{} tarefas com as condições \texttt{sampling} e \texttt{critic}
-(\Bdata{}, \emph{commit} \BcommitID{}). \textbf{Experimento~2} avalia a
-decomposição fatorial completa nas mesmas \An{} tarefas, com as quatro condições
-(\Adata{}, \emph{commit} \AcommitID{}). As três condições de crítico foram
-\emph{reexecutadas do zero} no Experimento~2, para que saíssem todas do mesmo
-código, na mesma máquina e sob o mesmo modelo; a condição \texttt{sampling} é
-reaproveitada do Experimento~1, por não depender do Crítico. Os dois
-\textbf{estudos piloto}, de \Kn{} e \Pn{} tarefas, precederam o Experimento~2 e
-são usados apenas na análise de estabilidade (Seção~\ref{sec:estabilidade}).
+As duas medições diferem em um ponto que precisa ser declarado: a mensagem
+enviada ao Crítico. Na versão \textbf{P1}, usada na medição anterior, ela
+continha a regra em linguagem natural e o relatório de execução nos pares de
+demonstração, mas não o código candidato — o Crítico julgava uma descrição do
+algoritmo, e não o algoritmo. Na versão \textbf{P2}, usada na medição principal,
+o código candidato é incluído. A inclusão não abre vazamento: o filtro atua sobre
+a saída do Crítico, nunca sobre a entrada, e o código é a própria saída do
+Gerador.\vejaApendice{2}
 
-\paragraph{Duas versões do protocolo do Crítico.} Os dois experimentos usam
-versões diferentes da mensagem enviada ao Crítico, e a distinção é material. Na
-versão \textbf{P1}, usada no Experimento~1, a mensagem continha a regra em
-linguagem natural e o relatório de execução nos pares de demonstração, mas
-\emph{não} o código candidato: o Crítico julgava uma descrição do algoritmo, não
-o algoritmo, e não podia apontar divergências entre o código e a regra enunciada
-nem erros visíveis apenas no código. Na versão \textbf{P2}, usada no
-Experimento~2 e nos pilotos, o código candidato é incluído. A correção não
-introduz vazamento: o filtro anti-vazamento atua sobre a saída do Crítico, nunca
-sobre a entrada, e o código candidato é a própria saída do Gerador. A mudança é
-verificável nas críticas brutas, que sob P2 passam a comparar código e regra
-diretamente — algo estruturalmente impossível sob P1:
-
-\begin{quote}\small\itshape
-``\#\# CODE/RULE MISMATCH The code implements line drawing and overwriting order
-based on iteration sequence, but it completely fails to implement the precedence
-or layering rule described in item 3 of the stated rule.''
-\end{quote}
-
-\noindent Como \texttt{sampling} foi coletado em \Bdata{} e as condições de
-crítico em \Adata{}, as comparações que envolvem a linha de base carregam um
-confundimento temporal; ele é declarado e delimitado na
+A condição \texttt{sampling} não depende do Crítico e é comum às duas medições;
+ela foi coletada em \Bdata{}, enquanto as três condições de crítico da medição
+principal foram coletadas em \Adata{}. As comparações que envolvem a linha de
+base carregam, portanto, um confundimento temporal, delimitado na
 Seção~\ref{sec:limitacoes}.
 
 \section{Resultados}
 
-\subsection{Comparação Principal sob o Protocolo P1}
-\label{sec:exp1}
-
-O Experimento~1 executou \Bchamadas{} chamadas em \Bminutos{} minutos, com
-\Bchaves{} chaves de API em paralelo. A Tabela~\ref{tab:exp1} reporta os
-resultados agregados e a Tabela~\ref{tab:contingencia}, a estrutura pareada.
-
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-Condição & Res. & Acur. & Treino & Prog. & Tokens \\
-\midrule
-\texttt{sampling} & \BsampRes/\Bn & \textbf{\BsampAcc\%} & \BsampTreino\% & \BsampProg{} & \BsampTok\,M \\
-\texttt{critic}   & \BcritRes/\Bn & \BcritAcc\%          & \BcritTreino\% & \BcritProg{} & \BcritTok\,M \\
-\bottomrule
-\end{tabular}
-\caption{Experimento~1 (protocolo P1), resultados agregados. ``Treino'' é a
-fração de tarefas em que o candidato final reproduz todos os pares de
-demonstração — o alvo que ambas as estratégias de fato otimizam; ``Prog.'' é o
-número médio de programas gerados por tarefa.}
-\label{tab:exp1}
-\end{table}
-
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{@{}lcc@{}}
-\toprule
- & \texttt{critic} resolveu & \texttt{critic} falhou \\
-\midrule
-\texttt{sampling} resolveu & \Bambos{} & \textbf{\BsoSamp{}} \\
-\texttt{sampling} falhou   & \textbf{\BsoCrit{}} & \Bnenhum{} \\
-\bottomrule
-\end{tabular}
-\caption{Tabela de contingência pareada do Experimento~1. Apenas as células em
-negrito informam qual estratégia é melhor; as \Bdiscord{} discordâncias
-(\BdiscordPct\% das tarefas) dividem-se \BsoCrit{}\,$\times$\,\BsoSamp{}.}
-\label{tab:contingencia}
-\end{table}
-
-% >>> VEREDITO (Experimento 1)
-Sob orçamento igualado, \vereditoUm{}: a diferença é de \Bdelta~pp, com McNemar
-exato $p$ = \Bp{} (Equação~\ref{eq:mcnemar} com $a = \BsoCrit$ e
-$b = \BsoSamp$). O intervalo de confiança de Wilson (Equação~\ref{eq:wilson})
-sobre a proporção de discordâncias a favor do Crítico, convertido para acurácia,
-é \BicBaixo{} a \BicAlto~pp.
-
-As duas condições resolvem conjuntos quase coincidentes: \Bambos{} tarefas em
-comum, \Bnenhum{} em que ambas falham, e as \Bdiscord{} discordâncias divididas
-praticamente ao meio. A diferença chegou a inverter de sinal entre a análise
-interina de \Binterina{} tarefas e o conjunto de \Bn{}, comportamento compatível
-com ruído e não com efeito. O intervalo de confiança delimita qualquer vantagem
-do Crítico a \BicAltoAbs~pp.
-
-A explicação candidata mais natural para o resultado nulo — que o Crítico
-induziria maior sobreajuste aos pares de demonstração — foi registrada como
-exploratória e testada nas tarefas novas isoladamente, sem se replicar
-(\BoverfitInterina\% na análise interina contra \BoverfitReplica\% na réplica,
-$p$ = \BoverfitP).
-
 \subsection{Decomposição Fatorial em Escala}
 \label{sec:exp2}
-
-O Experimento~2 executou \Achamadas{} chamadas ao longo de dois dias, cobrindo
-\Aexecucoes{} execuções de condição-tarefa e \Acriticas{} críticas emitidas, com
-\Achaves{} chaves úteis. As salvaguardas da Seção~\ref{sec:salvaguardas} se
-sustentaram integralmente: \Aleaks{} eventos de vazamento nas \Acriticas{}
-críticas, \Aerros{} erros de API e \Atrunc{} respostas truncadas. A cota
-efetivamente medida foi de $\sim$\Acota{} chamadas por chave por dia, e não as
-\AcotaAnunciada{} anunciadas — uma discrepância que vale registrar para quem
-for dimensionar uma réplica.
 
 \begin{table}[t]
 \centering
@@ -914,9 +845,11 @@ Condição & Res. & Acur. & Treino & Prog. & Tok. \\
 \texttt{no\_oracle} & \AnoorRes/\An  & \AnoorAcc\%  & \AnoorTreino\%  & \AnoorProg{}  & \AnoorTok\,k \\
 \bottomrule
 \end{tabular}
-\caption{Experimento~2 (protocolo P2), resultados agregados nas quatro
-condições, ordenadas por acurácia. Colunas como na Tabela~\ref{tab:exp1};
-``Tok.'' é o consumo médio de tokens por tarefa.}
+\caption{Resultados agregados nas quatro condições, ordenadas por acurácia.
+``Treino'' é a fração de tarefas em que o candidato final reproduz todos os pares
+de demonstração — o alvo que as estratégias de fato otimizam; ``Prog.'' é o
+número médio de programas gerados por tarefa e ``Tok.'', o consumo médio de
+tokens.}
 \label{tab:exp2}
 \end{table}
 
@@ -935,10 +868,10 @@ Par & Discord. & $p$ & IC 95\% \\
 \texttt{critic}--\texttt{cegis}  & \CcincoDisc{} (\CcincoSplit) & \Ccincop{} & \CcincoLo{} a \CcincoHi \\
 \bottomrule
 \end{tabular}
-\caption{As \numComparacoes{} comparações pré-registradas do Experimento~2, com
-$p$ de McNemar exato e intervalos em pontos percentuais. Nenhuma é significativa
-sob Bonferroni ($\alpha = \alfaBonf$), e nenhuma cruza sequer
-$\alpha = 0{,}05$ isoladamente: o menor $p$ observado é \pMenor.}
+\caption{As \numComparacoes{} comparações pré-registradas, com $p$ de McNemar
+exato e intervalos em pontos percentuais. Nenhuma é significativa sob Bonferroni
+($\alpha = \alfaBonf$), e nenhuma cruza sequer $\alpha = 0{,}05$ isoladamente:
+o menor $p$ observado é \pMenor.}
 \label{tab:comparacoes}
 \end{table}
 
@@ -976,20 +909,20 @@ $\alpha = 0{,}05$ isoladamente: o menor $p$ observado é \pMenor.}
   \node[rot, anchor=west] at (-11,\ye+0.22) {5.\ \texttt{critic}--\texttt{cegis} ($p=\Ccincop$)};
 \end{tikzpicture}
 \caption{Intervalos de confiança de 95\% das \numComparacoes{} comparações
-pré-registradas do Experimento~2. A linha vertical marca a ausência de efeito, e
-todos os intervalos a cruzam. O que a figura evidencia não é uma ordenação entre
+pré-registradas. A linha vertical marca a ausência de efeito, e todos os
+intervalos a cruzam. O que a figura evidencia não é uma ordenação entre
 condições, e sim a largura dos intervalos: mesmo em \An{} tarefas, a medição não
 separa as hipóteses.}
 \label{fig:forest}
 \end{figure}
 
-% >>> VEREDITO (Experimento 2)
+% >>> VEREDITO (resultado principal)
 Com as quatro condições medidas nas mesmas \An{} tarefas
 (Tabela~\ref{tab:exp2}), \vereditoDois{} (Tabela~\ref{tab:comparacoes},
 Figura~\ref{fig:forest}). A comparação mais próxima é \sigMaisProxima{}, com
-$p$ = \Cquatrop, e o intervalo correspondente
-(\CquatroLo{} a \CquatroHi~pp) ainda inclui o zero. A diferença observada entre
-\texttt{critic} e \texttt{sampling} é de \AdeltaCritSamp~pp.
+$p$ = \Cquatrop, e o intervalo correspondente (\CquatroLo{} a \CquatroHi~pp)
+ainda inclui o zero. A diferença entre \texttt{critic} e \texttt{sampling} é de
+\AdeltaCritSamp~pp, e o intervalo admite desde \CumLo{} até \CumHi~pp.
 
 O mecanismo, no entanto, opera exatamente como projetado. O Crítico produz
 \AcritProg{} programas por tarefa contra \AsampProg{} da amostragem —
@@ -1000,12 +933,12 @@ com eficiência real; o que não ocorre é a conversão disso em acurácia no te
 A restrição de formato de \texttt{critic\_cegis} foi obedecida sem exceção:
 \CegisConf{} das críticas emitidas trouxeram um rótulo válido de classe de
 correção, e o risco de o modelo escapar do vocabulário fechado não se
-concretizou em escala. A adesão ao formato não se traduziu em vantagem.
-
-Entre as quatro, \texttt{critic\_no\_oracle} é a de menor acurácia bruta
-(\AnoorAcc\%) e, ao mesmo tempo, a única que descreve um sistema executável sem
-gabarito. Nesta escala, crítica estruturada sem informação privilegiada não
-compra nada mensurável.
+concretizou em escala. A adesão ao formato não se traduziu em vantagem. Entre as
+quatro, \texttt{critic\_no\_oracle} é a de menor acurácia bruta (\AnoorAcc\%) e,
+ao mesmo tempo, a única que descreve um sistema executável sem gabarito: nesta
+escala, crítica estruturada sem informação privilegiada não compra nada
+mensurável. O filtro anti-vazamento registrou \Aleaks{} eventos nas \Acriticas{}
+críticas emitidas.
 
 \subsection{A Origem das Vitórias}
 \label{sec:primeirageracao}
@@ -1043,13 +976,13 @@ primeira geração das obtidas pelo ciclo.
   \node[font=\scriptsize, anchor=west] at (\GcegisTot+3,\yC) {\GcegisTot{} \ (\GcegisCiclo)};
   \node[font=\scriptsize, anchor=west] at (\GnoorTot+3,\yD)  {\GnoorTot{} \ (\GnoorCiclo)};
 \end{tikzpicture}
-\caption{Decomposição das vitórias no Experimento~2, em tarefas resolvidas de
-\An{}. O segmento claro são as vitórias decididas na primeira geração, comum às
-quatro condições; o escuro, as atribuíveis ao ciclo. Os rótulos dão o total e,
-entre parênteses, a parcela do ciclo. A ordenação pelo total
-(\GcritTot{}, \GsampTot{}, \GcegisTot{}, \GnoorTot{}) \emph{inverte} quando se
-olha apenas o ciclo (\GcegisCiclo{}, \GcritCiclo{}, \GnoorCiclo{},
-\GsampCiclo{}): as três condições de crítico passam à frente da linha de base.}
+\caption{Decomposição das vitórias, em tarefas resolvidas de \An{}. O segmento
+claro são as vitórias decididas na primeira geração, comum às quatro condições;
+o escuro, as atribuíveis ao ciclo. Os rótulos dão o total e, entre parênteses, a
+parcela do ciclo. A ordenação pelo total (\GcritTot{}, \GsampTot{},
+\GcegisTot{}, \GnoorTot{}) \emph{inverte} quando se olha apenas o ciclo
+(\GcegisCiclo{}, \GcritCiclo{}, \GnoorCiclo{}, \GsampCiclo{}): as três condições
+de crítico passam à frente da linha de base.}
 \label{fig:decomposicao}
 \end{figure}
 
@@ -1075,131 +1008,139 @@ primeira geração não resolveu em nenhuma das duas condições do par. Anális
 \label{tab:restritas}
 \end{table}
 
-% >>> VEREDITO (desconto da primeira geração)
-O achado dominante do Experimento~2 é que \vereditoTres{}. Restringindo cada par
-às tarefas que a primeira geração não resolveu em nenhuma das duas condições
-(Tabela~\ref{tab:restritas}), o experimento discrimina de fato em cerca de um
-quinto da própria amostra, e todos os \numComparacoes{} $p$-valores ficam entre
+% >>> VEREDITO (origem das vitórias)
+O resultado dominante é que \vereditoTres{}. Restringindo cada par às tarefas que
+a primeira geração não resolveu em nenhuma das duas condições
+(Tabela~\ref{tab:restritas}), a medição discrimina de fato em cerca de um quinto
+da própria amostra, e todos os \numComparacoes{} $p$-valores ficam entre
 \RpMenor{} e \RpMaior{}.
 
-Duas leituras decorrem daí, e ambas devem ser registradas. A primeira é
-metodológica: o poder estatístico efetivo de uma comparação entre arquiteturas de
-agentes é muito menor do que $n$ sugere, porque boa parte da amostra é decidida
-antes de qualquer estratégia agir, ou por nenhuma delas. A segunda é
-substantiva e vai na direção oposta ao número bruto: descontada a primeira
-geração, as três condições de crítico ficam \emph{acima} de \texttt{sampling} em
-vitórias do ciclo (\GcegisCiclo{}, \GcritCiclo{} e \GnoorCiclo{} contra
-\GsampCiclo{}). As diferenças são pequenas e nenhuma é significativa, mas a
-direção depende de qual quantidade se observa — e essa dependência é invisível em
-qualquer relato que reporte apenas acurácia agregada.
+Duas leituras decorrem daí. A primeira é metodológica: o poder estatístico
+efetivo de uma comparação entre arquiteturas de agentes é muito menor do que $n$
+sugere, porque boa parte da amostra é decidida antes de qualquer estratégia agir,
+ou por nenhuma delas. A segunda é substantiva e vai na direção oposta ao número
+bruto: descontada a primeira geração, as três condições de crítico ficam
+\emph{acima} de \texttt{sampling} em vitórias do ciclo (\GcegisCiclo{},
+\GcritCiclo{} e \GnoorCiclo{} contra \GsampCiclo{}). As diferenças são pequenas e
+nenhuma é significativa, mas a direção depende de qual quantidade se observa — e
+essa dependência é invisível em qualquer relato que reporte apenas acurácia
+agregada.
 
-\paragraph{O efeito replica sob o outro protocolo.} O mesmo padrão aparece no
-Experimento~1, com duas condições e sob P1: das \BsampRes{} vitórias de
-\texttt{sampling}, \BsampPrimeira{} vêm da primeira geração, e das \BcritRes{}
-de \texttt{critic}, \BcritPrimeira{} — o que deixa o placar do ciclo em
-\BsampCiclo{}\,$\times$\,\BcritCiclo{}, exatamente empatado. Restrito às
-\BdiscrimN{} tarefas que a primeira geração não resolveu, o placar é
-\BresidualCrit{}\,$\times$\,\BresidualSamp{} ($p$ = \BresidualP). Dois
-experimentos independentes, protocolos diferentes e amostras de condições
-diferentes produzem a mesma conclusão sobre a origem das vitórias.
+O efeito replica na medição anterior, com duas condições e sob o protocolo P1:
+das \BsampRes{} vitórias de \texttt{sampling}, \BsampPrimeira{} vêm da primeira
+geração, e das \BcritRes{} de \texttt{critic}, \BcritPrimeira{} — o que deixa o
+placar do ciclo em \BsampCiclo{}\,$\times$\,\BcritCiclo{}, exatamente empatado.
+Restrito às \BdiscrimN{} tarefas que a primeira geração não resolveu, o placar é
+\BresidualCrit{}\,$\times$\,\BresidualSamp{} ($p$ = \BresidualP). Essa medição
+também não distingue as duas condições em acurácia agregada
+(\Bdelta~pp, $p$ = \Bp{}, intervalo de \BicBaixo{} a \BicAlto~pp): sob orçamento
+igualado, \vereditoUm{}.
 
-\paragraph{A correção existe e não foi aplicada.} O confundimento é eliminável
-por construção: o \emph{commit} \SeedCommit{} implementa um \emph{cache} de
-semente em que a primeira condição a alcançar uma tarefa grava a primeira
-geração e as demais a repetem, com a repetição ainda debitada do orçamento. Ele
-nunca foi integrado, e nenhum dos experimentos aqui reportados o utiliza. Além de
-remover o confundimento, ele economizaria
-$(\text{condições} - 1) \times \text{tarefas}$ chamadas por bloco —
-\SeedEconomia{} em um bloco de quatro condições. Uma réplica confirmatória
-deveria exigi-lo.
+O confundimento é eliminável por construção. Basta que a primeira condição a
+alcançar uma tarefa grave a primeira geração e as demais a repitam, com a
+repetição ainda debitada do orçamento — um \emph{cache} de semente. Além de
+remover o confundimento, ele economiza
+$(\text{condições} - 1) \times \text{tarefas}$ chamadas por bloco,
+\SeedEconomia{} em um bloco de quatro condições. Nenhuma das medições aqui
+reportadas o utiliza.\vejaApendice{3}
 
 \subsection{Estabilidade das Estimativas}
 \label{sec:estabilidade}
 
+As comparações acima não são significativas, mas a ordenação que elas produzem é
+frequentemente o que sobra de um estudo desses. Para medir quanto dessa ordenação
+é reprodutível, subamostramos o conjunto fechado de \An{} tarefas sem reposição,
+preservando o pareamento — as quatro condições avaliadas no mesmo subconjunto —
+em \SubRep{} repetições por tamanho.
+
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[x=1cm, y=0.19cm]
-  \draw[gray!50] (0,17) -- (0,41);
-  \foreach \y in {20,25,30,35,40} {
-    \draw[gray!25] (0,\y) -- (2.45,\y);
-    \node[font=\scriptsize, gray, anchor=east] at (-0.05,\y) {\y\%};
+\begin{tikzpicture}[x=0.0135cm, y=0.032cm]
+  \draw[gray!50] (0,0) -- (0,100);
+  \foreach \y in {0,25,50,75,100} {
+    \draw[gray!25] (0,\y) -- (285,\y);
+    \node[font=\scriptsize, gray, anchor=east] at (-6,\y) {\y\%};
   }
-  \node[font=\scriptsize, anchor=north] at (0.30,17) {$n = \Kn$};
-  \node[font=\scriptsize, anchor=north] at (1.30,17) {$n = \Pn$};
-  \node[font=\scriptsize, anchor=north] at (2.30,17) {$n = \An$};
-  % uma linha por condição: lê \K*AccN, \P*AccN e \A*AccN do painel
-  \draw[very thick] (0.30,\KcritAccN) -- (1.30,\PcritAccN) -- (2.30,\AcritAccN);
-  \draw[thick, gray!70] (0.30,\KsampAccN) -- (1.30,\PsampAccN) -- (2.30,\AsampAccN);
-  \draw[thick, gray!60, dashed] (0.30,\KnoorAccN) -- (1.30,\PnoorAccN) -- (2.30,\AnoorAccN);
-  \draw[thick, gray!60, dotted] (0.30,\KcegisAccN) -- (1.30,\PcegisAccN) -- (2.30,\AcegisAccN);
-  \foreach \x/\ya/\yb/\yc/\yd in {0.30/\KcritAccN/\KsampAccN/\KnoorAccN/\KcegisAccN} {}
-  \fill (0.30,\KcritAccN)  circle (1.4pt); \fill (1.30,\PcritAccN)  circle (1.4pt); \fill (2.30,\AcritAccN)  circle (1.4pt);
-  \fill (0.30,\KsampAccN)  circle (1.4pt); \fill (1.30,\PsampAccN)  circle (1.4pt); \fill (2.30,\AsampAccN)  circle (1.4pt);
-  \fill (0.30,\KnoorAccN)  circle (1.4pt); \fill (1.30,\PnoorAccN)  circle (1.4pt); \fill (2.30,\AnoorAccN)  circle (1.4pt);
-  \fill (0.30,\KcegisAccN) circle (1.4pt); \fill (1.30,\PcegisAccN) circle (1.4pt); \fill (2.30,\AcegisAccN) circle (1.4pt);
-  \node[font=\scriptsize, anchor=west] at (2.36,\AcritAccN)  {\texttt{critic}};
-  \node[font=\scriptsize, anchor=west] at (2.36,\AsampAccN)  {\texttt{sampling}};
-  \node[font=\scriptsize, anchor=west, yshift=2.2pt]  at (2.36,\AcegisAccN) {\texttt{cegis}};
-  \node[font=\scriptsize, anchor=west, yshift=-2.2pt] at (2.36,\AnoorAccN)  {\texttt{no\_oracle}};
+  \foreach \x in {30,60,90,135,180,270} {
+    \node[font=\scriptsize, gray, anchor=north] at (\x,-3) {\x};
+  }
+  \node[font=\scriptsize, gray, anchor=north] at (150,-22) {tarefas na subamostra};
+  % direção critic > sampling preservada
+  \draw[very thick] (30,\SubDirAN) -- (60,\SubDirBN) -- (90,\SubDirCN)
+                 -- (135,\SubDirDN) -- (180,\SubDirEN) -- (270,100);
+  % ordenação completa das quatro condições preservada
+  \draw[thick, dashed, gray!70] (30,\SubOrdAN) -- (60,\SubOrdBN) -- (90,\SubOrdCN)
+                 -- (135,\SubOrdDN) -- (180,\SubOrdEN) -- (270,100);
+  \draw[gray!60] (0,50) -- (285,50);
+  \node[rot, anchor=west] at (95,88) {direção \texttt{critic} $>$ \texttt{samp}};
+  \node[rot, anchor=west] at (95,22) {ordenação das quatro};
+  \node[rot, anchor=east] at (128,50) {acaso};
 \end{tikzpicture}
-\caption{A mesma configuração medida em três escalas de amostra. A ordenação
-entre as condições muda de uma escala para a outra: \texttt{critic} sai de
-\KcritAcc\% (abaixo da linha de base) para \PcritAcc\% (acima) e assenta em
-\AcritAcc\%; \texttt{cegis} sobe monotonicamente de \KcegisAcc\% a \AcegisAcc\%.
-Nenhuma diferença é significativa em nenhuma das três escalas.}
+\caption{Reprodutibilidade da ordenação sob subamostragem das próprias \An{}
+tarefas (\SubRep{} repetições por tamanho). A linha cheia é a fração de
+subamostras em que \texttt{critic} supera \texttt{sampling}; a tracejada, a
+fração em que a ordenação completa das quatro condições coincide com a observada
+em \An{}. Em \SubNa{} tarefas a direção é indistinguível de um sorteio
+(\SubDirA\%) e a ordenação completa se reproduz em \SubOrdA\% das vezes. Ambas as
+curvas convergem a 100\% em \An{} por construção.}
 \label{fig:estabilidade}
 \end{figure}
 
-As mesmas quatro condições foram medidas em \Kn{}, \Pn{} e \An{} tarefas
-(Figura~\ref{fig:estabilidade}). A ordenação não é estável: no piloto de \Kn{}
-tarefas, \texttt{critic} ficava abaixo da linha de base (\KcritAcc\% contra
-\KsampAcc\%); no de \Pn{}, acima e por larga margem (\PcritAcc\% contra
-\PsampAcc\%); em \An{}, acima por pouco (\AcritAcc\% contra \AsampAcc\%). Em
-nenhuma das três escalas há significância.
+O resultado está na Figura~\ref{fig:estabilidade}. Com \SubNa{} tarefas, a
+direção observada em \An{} — \texttt{critic} acima de \texttt{sampling} — se
+reproduz em \SubDirA\% das subamostras, o que é indistinguível de um sorteio, e a
+banda de 5 a 95\% da diferença de acurácia vai de \SubBandaAlo{} a
+\SubBandaAhi~pp. Com \SubNb{} tarefas, ainda \SubDirB\% e
+\SubBandaBlo{} a \SubBandaBhi~pp. A ordenação completa das quatro condições é
+substancialmente mais frágil: reproduz-se em \SubOrdA\% das subamostras de
+\SubNa{} tarefas e em \SubOrdB\% das de \SubNb{}.
 
-Um segundo episódio, ocorrido durante a coleta do Experimento~2, quantifica o
-mesmo risco de forma mais direta. Sobre as primeiras \ProjN{} tarefas, a
-comparação \sigMaisProxima{} estava em $p$ = \ProjPinterino{}; extrapolar aquelas
-proporções para \An{} tarefas produzia $p$ = \ProjPextrapolado{}, valor que teria
-atravessado a correção de Bonferroni. O experimento fechou em
-$p$ = \ProjPfinal{}. No mesmo intervalo, a vantagem de \texttt{critic} sobre
-\texttt{sampling} encolheu de \ProjDeltaInterino~pp para \ProjDeltaFinal~pp.
-Extrapolação de análise interina não é previsão, e a distância entre
-\ProjPextrapolado{} e \ProjPfinal{} é a medida de quanto ela pode errar.
+Duas consequências. A primeira é que estudos desta classe conduzidos em algumas
+dezenas de tarefas não estão medindo direção — estão reportando ruído com um
+sinal, e a ordenação entre mais de duas condições é essencialmente incidental. A
+segunda é que a subamostragem mede apenas a variância de \emph{amostra}: uma
+reexecução real acrescenta a variância do próprio modelo, de modo que os valores
+acima são um piso otimista para a instabilidade observável na prática.
 
-Este é o mecanismo que produz literaturas contraditórias sem exigir má conduta de
-ninguém: um estudo que parasse em qualquer um desses pontos reportaria uma
+Uma segunda evidência, do mesmo conjunto, quantifica o risco de extrapolar antes
+do fechamento. Sobre as primeiras \ProjN{} tarefas, a comparação
+\sigMaisProxima{} estava em $p$ = \ProjPinterino{}; extrapolar linearmente
+aquelas proporções para \An{} produzia $p$ = \ProjPextrapolado{}, valor que teria
+atravessado a correção de Bonferroni. O conjunto fechado deu $p$ = \ProjPfinal{},
+e a vantagem de \texttt{critic} sobre \texttt{sampling} encolheu de
+\ProjDeltaInterino~pp para \ProjDeltaFinal~pp. A extrapolação errou a
+significância por mais de uma ordem de magnitude.
+
+É esse o mecanismo que produz literaturas contraditórias sem exigir má conduta:
+um estudo que parasse em qualquer ponto anterior ao fechamento reportaria uma
 direção diferente, todos com $p$ não significativo, todos reportáveis como
 observação direcional, e todos ruído
 \citep{button:13,gelman:14,ioannidis:05}.
 
-\subsection{Análise Qualitativa}
+\subsection{Evidência Qualitativa do Mecanismo}
+\label{sec:qualitativo}
 
-Uma tarefa do conjunto ilustra tanto o mecanismo funcionando quanto o limite do
-que um caso isolado pode sustentar. Ela requer conectar, por segmentos de reta,
-pares de pixels de mesma cor que compartilham linha ou coluna; o detalhe que
-invalida soluções ingênuas é que, no cruzamento de linhas de cores diferentes, a
-vertical tem precedência sobre a horizontal.
+Uma tarefa mostra o que a crítica estruturada faz quando funciona. Ela requer
+conectar, por segmentos de reta, pares de pixels de mesma cor que compartilham
+linha ou coluna; o detalhe que invalida soluções ingênuas é que, no cruzamento de
+linhas de cores diferentes, a vertical tem precedência sobre a horizontal.
 
-No Experimento~2, \texttt{sampling} falha nas \orcamento{} tentativas
-independentes: sem informação sobre o erro, cada tentativa reinventa uma variação
-da mesma regra incompleta e nenhuma chega a mencionar o comportamento nos
-cruzamentos. \texttt{critic\_no\_oracle} resolve em duas rodadas \emph{sem jamais
-ver o gabarito}, com a crítica citada na Seção~\ref{sec:procedimento}: uma
-comparação entre o código e a regra que o próprio Gerador enunciou, suficiente
-para localizar o defeito. É o mecanismo operando no regime em que ele deveria
-operar, e sem informação privilegiada.
+\texttt{sampling} falha nas \orcamento{} tentativas independentes: sem informação
+sobre o erro, cada tentativa reinventa uma variação da mesma regra incompleta e
+nenhuma chega a mencionar o comportamento nos cruzamentos.
+\texttt{critic\_no\_oracle} resolve em duas rodadas \emph{sem jamais ver o
+gabarito}: sua crítica compara o código com a regra que o próprio Gerador
+enunciou e aponta que a implementação sobrescreve as interseções na ordem em que
+os segmentos são desenhados, sem precedência alguma — suficiente para localizar
+o defeito.\vejaApendice{2} É o mecanismo operando no regime para o qual foi
+projetado, e sem informação privilegiada — o que delimita o quanto do efeito
+depende do oráculo.
 
-O contrapeso vem do mesmo caso. No piloto de \Pn{} tarefas, esta tarefa era
-resolvida por \texttt{critic} e \texttt{critic\_no\_oracle} e \emph{falhada} por
-\texttt{critic\_cegis}, cujo vocabulário fechado não conseguia expressar qual
-orientação tinha precedência. No Experimento~2, com o mesmo código, o mesmo
-modelo e a mesma tarefa, \texttt{critic\_cegis} resolve em duas rodadas. O
-desfecho de um caso individual não é estável entre execuções, pela mesma razão
-que a ordenação entre condições não é estável entre escalas de amostra
-(Seção~\ref{sec:estabilidade}). É por isso que a conclusão deste trabalho se
-apoia no teste pareado sobre a amostra inteira, e nenhum caso individual é
-oferecido como evidência de mecanismo.
+O caso é oferecido como ilustração do mecanismo, não como evidência de sua
+eficácia agregada. O desfecho de tarefas individuais varia entre execuções da
+mesma configuração, pela mesma razão que a ordenação varia entre subamostras
+(Seção~\ref{sec:estabilidade}); as conclusões deste trabalho se apoiam no teste
+pareado sobre a amostra inteira.
 
 \section{Discussão}
 
@@ -1255,8 +1196,8 @@ que no regime médio capturado pela acurácia agregada.
 
 \begin{enumerate}\itemsep2pt
   \item \textbf{Metade do resultado vem de uma chamada comum às condições.} É a
-  limitação dominante (Seção~\ref{sec:primeirageracao}), e tem correção escrita e
-  não aplicada (\emph{commit} \SeedCommit{}).
+  limitação dominante (Seção~\ref{sec:primeirageracao}). A correção é conhecida e
+  barata — um \emph{cache} de semente — e não foi aplicada aqui.
   \item \textbf{Confundimento temporal na linha de base.} \texttt{sampling} foi
   coletado em \Bdata{} e as condições de crítico em \Adata{}. O modelo é
   hospedado e pode ter mudado do lado do servidor no intervalo; nenhum
@@ -1277,10 +1218,10 @@ que no regime médio capturado pela acurácia agregada.
   ruído do modelo, ampliado em \texttt{sampling} pela temperatura alta. O
   pareamento mitiga, não elimina — e a instabilidade de casos individuais entre
   execuções é visível na Seção~\ref{sec:estabilidade}.
-  \item \textbf{Análises interinas durante a coleta.} Foram feitas, e inflam o
-  erro tipo I. Os $p$-valores reportados são os da análise pré-registrada sobre o
-  conjunto fechado, mas o histórico de espiadas está registrado por honestidade,
-  incluindo a extrapolação que errou por uma ordem de magnitude.
+  \item \textbf{Análises interinas durante a coleta} inflam o erro tipo I. Os
+  $p$-valores reportados são os da análise pré-registrada sobre o conjunto
+  fechado; a Seção~\ref{sec:estabilidade} quantifica o custo de tê-las
+  consultado.
   \item \textbf{Vazamento residual.} O filtro captura grades e código, não
   paráfrases. A contagem de \Aleaks{} redações mede o que foi barrado, não o que
   passou.
@@ -1293,29 +1234,28 @@ que no regime médio capturado pela acurácia agregada.
 
 % >>> VEREDITO (conclusão)
 Sob orçamento fixo de chamadas a um modelo de linguagem para síntese de programas
-no ARC-AGI-1, \vereditoUm{}, com intervalo de confiança que delimita qualquer
-vantagem a \BicAltoAbs~pp em \Bn{} tarefas sob o protocolo P1. Uma decomposição
-fatorial nas mesmas \An{} tarefas, com quatro condições que variam isoladamente o
-acesso ao oráculo e a forma do feedback, tampouco separa as condições:
-\vereditoDois{}. O crítico opera como mecanismo, atingindo a mesma consistência
-com os pares de demonstração com \AreducaoProg\% menos programas, sem que isso se
-converta em acerto no par de teste.
+no ARC-AGI-1, quatro condições que variam isoladamente o acesso ao oráculo e a
+forma do feedback não se separam em \An{} tarefas: \vereditoDois{}. O crítico
+opera como mecanismo, atingindo a mesma consistência com os pares de demonstração
+com \AreducaoProg\% menos programas, sem que isso se converta em acerto no par de
+teste; e uma medição independente sobre as mesmas tarefas confirma que
+\vereditoUm{}.
 
-O resultado que consideramos mais transferível é outro, e independe de qual
-condição venha a prevalecer: \vereditoTres{}. Descontada essa loteria, o
-experimento discrimina em cerca de um quinto da amostra, e a ordenação entre as
-condições inverte em relação ao número bruto. Qualquer comparação entre esquemas
-de inferência que partam do mesmo \emph{prompt} inicial herda esse confundimento,
-e nenhuma métrica agregada o revela.
+O resultado mais transferível é outro, e independe de qual condição venha a
+prevalecer: \vereditoTres{}. Descontada essa parcela, a medição discrimina em
+cerca de um quinto da amostra, e a ordenação entre as condições inverte em
+relação ao número bruto. Qualquer comparação entre esquemas de inferência que
+partam do mesmo \emph{prompt} inicial herda esse confundimento, e nenhuma métrica
+agregada o revela.
 
 Três contribuições permanecem. O protocolo: orçamento igualado, desenho pareado,
 oráculo que informa mas não seleciona, filtro de vazamento auditável — que
 registrou \Aleaks{} eventos em \Acriticas{} críticas — e família de comparações
-pré-registrada. O desconto da primeira geração, com a correção correspondente já
-escrita e ainda não integrada. E a documentação empírica de instabilidade em três
-escalas de amostra e em casos individuais, incluindo uma extrapolação de análise
-interina que projetou $p$ = \ProjPextrapolado{} para um resultado que fechou em
-$p$ = \ProjPfinal{}.
+pré-registrada. O desconto da primeira geração, com a correção correspondente
+identificada. E a medida de quanto uma ordenação entre condições é reprodutível:
+em \SubNb{} tarefas, a ordenação completa das quatro se repete em \SubOrdB\% das
+subamostras, e extrapolar uma análise interina projetou
+$p$ = \ProjPextrapolado{} para um resultado que fechou em $p$ = \ProjPfinal{}.
 
 O passo seguinte não é aumentar $n$. É integrar o \emph{cache} de semente, que
 elimina o confundimento dominante e reduz o custo de um bloco de quatro condições
@@ -1342,5 +1282,117 @@ críticas do desenho, incluindo a separação de informação entre os \emph{pro
 do Gerador e do Crítico e a paridade de orçamento entre as condições.
 
 \bibliography{artigo}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  APÊNDICE — material de execução e de histórico do projeto.
+%  Para a versão de conferência, troque \apendicetrue por \apendicefalse no
+%  preâmbulo: tudo entre aqui e o fim do arquivo desaparece, e o corpo continua
+%  íntegro (as referências ao apêndice viram referências a uma seção ausente,
+%  então rode check_artigo.py depois de desligar).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\ifapendice
+
+\section*{Apêndice A: Execução e Histórico}
+
+\subsection*{A.1 A medição sob o protocolo P1}
+
+A medição anterior (\Bdata{}, \emph{commit} \BcommitID{}), descrita na
+Seção~\ref{sec:procedimento}, avaliou apenas \texttt{sampling} e \texttt{critic}
+sobre as mesmas \Bn{} tarefas, sob o protocolo P1. A
+Seção~\ref{sec:primeirageracao} a usa como réplica independente do desconto da
+primeira geração; os agregados completos estão na Tabela~\ref{tab:exp1}.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Condição & Res. & Acur. & Treino & Prog. & Tokens \\
+\midrule
+\texttt{sampling} & \BsampRes/\Bn & \BsampAcc\% & \BsampTreino\% & \BsampProg{} & \BsampTok\,M \\
+\texttt{critic}   & \BcritRes/\Bn & \BcritAcc\% & \BcritTreino\% & \BcritProg{} & \BcritTok\,M \\
+\bottomrule
+\end{tabular}
+\caption{Agregados da medição sob P1.}
+\label{tab:exp1}
+\end{table}
+
+A tabela de contingência pareada divide-se em \Bambos{} tarefas resolvidas pelas
+duas condições, \Bnenhum{} por nenhuma, e \Bdiscord{} discordâncias
+(\BdiscordPct\% das tarefas) repartidas
+\BsoCrit{}\,$\times$\,\BsoSamp{} — a base do $p$ = \Bp{}
+(Equação~\ref{eq:mcnemar}) e do intervalo de \BicBaixo{} a \BicAlto~pp
+(Equação~\ref{eq:wilson}) reportados na Seção~\ref{sec:primeirageracao}.
+
+A explicação candidata para o resultado nulo — que o Crítico induziria maior
+sobreajuste aos pares de demonstração — foi registrada como exploratória e
+testada nas tarefas novas isoladamente, sem se replicar (\BoverfitInterina\% na
+análise interina contra \BoverfitReplica\% na réplica, $p$ = \BoverfitP).
+
+\subsection*{A.2 Os dois protocolos do Crítico}
+
+Sob \textbf{P1}, a mensagem enviada ao Crítico não continha o código candidato,
+apenas a regra e o relatório de execução. Uma crítica típica opera, por isso,
+sobre a descrição do algoritmo:
+
+\begin{quote}\small\itshape
+``The stated rule and code incorrectly assume an intersection-based logical
+operation\ldots{} converting many incorrect cells\ldots''
+\end{quote}
+
+\noindent Sob \textbf{P2}, com o código incluído, o Crítico passa a comparar a
+implementação com a regra enunciada — comportamento estruturalmente impossível
+antes:
+
+\begin{quote}\small\itshape
+``\#\# CODE/RULE MISMATCH The code implements line drawing and overwriting order
+based on iteration sequence, but it completely fails to implement the precedence
+or layering rule described in item 3 of the stated rule. Instead, whichever line
+type (row or column) is processed last simply overwrites the intersecting
+cells.''
+\end{quote}
+
+\noindent Esta é a crítica citada na Seção~\ref{sec:qualitativo}: emitida por
+\texttt{critic\_no\_oracle}, que nunca vê o gabarito, ela localiza o defeito por
+consistência interna entre código e regra.
+
+\subsection*{A.3 O \emph{cache} de semente}
+
+A correção para o confundimento da primeira geração
+(Seção~\ref{sec:primeirageracao}) está implementada no \emph{commit}
+\SeedCommit{} do repositório, em ramo não integrado. Nenhuma das medições
+reportadas neste trabalho o utiliza.
+
+\subsection*{A.4 Notas de execução}
+
+A medição sob P1 consumiu \Bchamadas{} chamadas em \Bminutos{} minutos com
+\Bchaves{} chaves de API em paralelo. A medição principal consumiu
+\Achamadas{} chamadas ao longo de dois dias, cobrindo \Aexecucoes{} execuções de
+condição-tarefa e \Acriticas{} críticas emitidas, com \Achaves{} chaves úteis;
+registrou \Aerros{} erros de API, \Atrunc{} respostas truncadas e \Aleaks{}
+eventos de vazamento. A cota efetivamente medida foi de $\sim$\Acota{} chamadas
+por chave por dia, contra as \AcotaAnunciada{} anunciadas — informação relevante
+para dimensionar uma réplica.
+
+\subsection*{A.5 Execuções-piloto e a banda predita}
+
+Antes da medição principal, a mesma configuração foi executada em \Kn{} e em
+\Pn{} tarefas. Essas execuções não entram na análise: a de \Pn{} tarefas foi
+descartada e refeita do zero ao se estender a amostra, e ambas medem execuções
+distintas, não subconjuntos da medição final. Servem apenas como verificação
+externa da Figura~\ref{fig:estabilidade}.
+
+A diferença \texttt{critic} menos \texttt{sampling} observada foi de
+\KdifObs~pp na execução de \Kn{} tarefas e de \PdifObs~pp na de \Pn{}. A banda de
+5 a 95\% prevista por subamostragem é de \SubBandaAlo{} a \SubBandaAhi~pp em
+\SubNa{} tarefas e de \SubBandaBlo{} a \SubBandaBhi~pp em \SubNb{}. O valor de
+\Pn{} tarefas cai dentro da banda; o de \Kn{} cai fora dela. A subamostragem
+mede apenas variância de amostra, enquanto uma reexecução acrescenta a variância
+do próprio modelo — o excesso observado é consistente com isso, e reforça que os
+valores da Seção~\ref{sec:estabilidade} são um piso otimista.
+
+\fi
 
 \end{document}
