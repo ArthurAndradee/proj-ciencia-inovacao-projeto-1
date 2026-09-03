@@ -19,3 +19,13 @@ results/gemma-run.log
 
 # Logs de execução ficam fora do repositório; os agregados entram na documentação.
 results/*.log
+
+# Intermediários do LaTeX. O .tex, o .bib e o .pdf do artigo são versionados;
+# o resto é regerado por AuthorKit27/compilar.sh.
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.synctex.gz
+AuthorKit27/*.log

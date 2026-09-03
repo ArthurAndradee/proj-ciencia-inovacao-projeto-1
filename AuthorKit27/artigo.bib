@@ -1,0 +1,320 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Bibliografia — Alocação de computação de inferência na síntese de programas
+%  Formatar com aaai2027.bst.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ---------------------------------------------------------------- ARC-AGI ----
+
+@misc{chollet:19,
+  author       = "Chollet, Fran\c{c}ois",
+  year         = 2019,
+  title        = "{On the Measure of Intelligence}",
+  howpublished = "arXiv:1911.01547",
+}
+
+@misc{chollet:24,
+  author       = "Chollet, Fran\c{c}ois and Knoop, Mike and Kamradt, Gregory
+                  and Landers, Bryan",
+  year         = 2024,
+  title        = "{ARC Prize 2024: Technical Report}",
+  howpublished = "arXiv:2412.04604",
+}
+
+@inproceedings{gendron:24,
+  author    = "Gendron, Ga{\"e}l and Bao, Qiming and Witbrock, Michael
+               and Dobbie, Gillian",
+  year      = 2024,
+  title     = "{Large Language Models Are Not Strong Abstract Reasoners}",
+  booktitle = "Proceedings of the Thirty-Third International Joint Conference
+               on Artificial Intelligence {(IJCAI-24)}",
+  pages     = "6270--6278",
+}
+
+@inproceedings{wang:24,
+  author    = "Wang, Ruocheng and Zelikman, Eric and Poesia, Gabriel
+               and Pu, Yewen and Haber, Nick and Goodman, Noah D.",
+  year      = 2024,
+  title     = "{Hypothesis Search: Inductive Reasoning with Language Models}",
+  booktitle = "The Twelfth International Conference on Learning Representations
+               {(ICLR)}",
+}
+
+@inproceedings{mirchandani:23,
+  author    = "Mirchandani, Suvir and Xia, Fei and Florence, Pete
+               and Ichter, Brian and Driess, Danny and Arenas, Montserrat Gonzalez
+               and Rao, Kanishka and Sadigh, Dorsa and Zeng, Andy",
+  year      = 2023,
+  title     = "{Large Language Models as General Pattern Machines}",
+  booktitle = "Proceedings of the 7th Conference on Robot Learning {(CoRL)}",
+  pages     = "2498--2518",
+}
+
+@misc{greenblatt:24,
+  author       = "Greenblatt, Ryan",
+  year         = 2024,
+  title        = "{Getting 50\% (SoTA) on ARC-AGI with GPT-4o}",
+  howpublished = "\url{https://redwoodresearch.substack.com/p/getting-50-sota-on-arc-agi-with-gpt}",
+  note         = "Accessed: 2026-08-28",
+}
+
+% ------------------------------------------------- Amostragem / best-of-N ----
+
+@misc{chen:21,
+  author       = "Chen, Mark and Tworek, Jerry and Jun, Heewoo and Yuan, Qiming
+                  and Pinto, Henrique Ponde de Oliveira and Kaplan, Jared
+                  and Edwards, Harri and Burda, Yuri and Joseph, Nicholas
+                  and Brockman, Greg and others",
+  year         = 2021,
+  title        = "{Evaluating Large Language Models Trained on Code}",
+  howpublished = "arXiv:2107.03374",
+}
+
+@article{li:22,
+  author  = "Li, Yujia and Choi, David and Chung, Junyoung and Kushman, Nate
+             and Schrittwieser, Julian and Leblond, R\'{e}mi and Eccles, Tom
+             and Keeling, James and Gimeno, Felix and Dal Lago, Agustin
+             and others",
+  year    = 2022,
+  title   = "{Competition-Level Code Generation with AlphaCode}",
+  journal = "Science",
+  volume  = 378,
+  number  = 6624,
+  pages   = "1092--1097",
+}
+
+@inproceedings{wang:23,
+  author    = "Wang, Xuezhi and Wei, Jason and Schuurmans, Dale and Le, Quoc V.
+               and Chi, Ed H. and Narang, Sharan and Chowdhery, Aakanksha
+               and Zhou, Denny",
+  year      = 2023,
+  title     = "{Self-Consistency Improves Chain of Thought Reasoning in
+               Language Models}",
+  booktitle = "The Eleventh International Conference on Learning Representations
+               {(ICLR)}",
+}
+
+@misc{brown:24,
+  author       = "Brown, Bradley and Juravsky, Jordan and Ehrlich, Ryan
+                  and Clark, Ronald and Le, Quoc V. and R\'{e}, Christopher
+                  and Mirhoseini, Azalia",
+  year         = 2024,
+  title        = "{Large Language Monkeys: Scaling Inference Compute with
+                  Repeated Sampling}",
+  howpublished = "arXiv:2407.21787",
+}
+
+@misc{snell:24,
+  author       = "Snell, Charlie and Lee, Jaehoon and Xu, Kelvin
+                  and Kumar, Aviral",
+  year         = 2024,
+  title        = "{Scaling {LLM} Test-Time Compute Optimally Can Be More
+                  Effective Than Scaling Model Parameters}",
+  howpublished = "arXiv:2408.03314",
+}
+
+@misc{cobbe:21,
+  author       = "Cobbe, Karl and Kosaraju, Vineet and Bavarian, Mohammad
+                  and Chen, Mark and Jun, Heewoo and Kaiser, Lukasz
+                  and Plappert, Matthias and Tworek, Jerry and Hilton, Jacob
+                  and Nakano, Reiichiro and Hesse, Christopher
+                  and Schulman, John",
+  year         = 2021,
+  title        = "{Training Verifiers to Solve Math Word Problems}",
+  howpublished = "arXiv:2110.14168",
+}
+
+@inproceedings{lightman:24,
+  author    = "Lightman, Hunter and Kosaraju, Vineet and Burda, Yura
+               and Edwards, Harri and Baker, Bowen and Lee, Teddy
+               and Leike, Jan and Schulman, John and Sutskever, Ilya
+               and Cobbe, Karl",
+  year      = 2024,
+  title     = "{Let's Verify Step by Step}",
+  booktitle = "The Twelfth International Conference on Learning Representations
+               {(ICLR)}",
+}
+
+% -------------------------------------- Refinamento iterativo e sua crítica --
+
+@inproceedings{chen:24,
+  author    = "Chen, Xinyun and Lin, Maxwell and Sch{\"a}rli, Nathanael
+               and Zhou, Denny",
+  year      = 2024,
+  title     = "{Teaching Large Language Models to Self-Debug}",
+  booktitle = "The Twelfth International Conference on Learning Representations
+               {(ICLR)}",
+}
+
+@inproceedings{madaan:23,
+  author    = "Madaan, Aman and Tandon, Niket and Gupta, Prakhar
+               and Hallinan, Skyler and Gao, Luyu and Wiegreffe, Sarah
+               and Alon, Uri and Dziri, Nouha and Prabhumoye, Shrimai
+               and Yang, Yiming and others",
+  year      = 2023,
+  title     = "{Self-Refine: Iterative Refinement with Self-Feedback}",
+  booktitle = "Advances in Neural Information Processing Systems 36
+               {(NeurIPS)}",
+  pages     = "46534--46594",
+}
+
+@inproceedings{shinn:23,
+  author    = "Shinn, Noah and Cassano, Federico and Berman, Edward
+               and Gopinath, Ashwin and Narasimhan, Karthik and Yao, Shunyu",
+  year      = 2023,
+  title     = "{Reflexion: Language Agents with Verbal Reinforcement Learning}",
+  booktitle = "Advances in Neural Information Processing Systems 36
+               {(NeurIPS)}",
+  pages     = "8634--8652",
+}
+
+@inproceedings{huang:24,
+  author    = "Huang, Jie and Chen, Xinyun and Mishra, Swaroop
+               and Zheng, Huaixiu Steven and Yu, Adams Wei and Song, Xinying
+               and Zhou, Denny",
+  year      = 2024,
+  title     = "{Large Language Models Cannot Self-Correct Reasoning Yet}",
+  booktitle = "The Twelfth International Conference on Learning Representations
+               {(ICLR)}",
+}
+
+@misc{stechly:23,
+  author       = "Stechly, Kaya and Marquez, Matthew and Kambhampati, Subbarao",
+  year         = 2023,
+  title        = "{GPT-4 Doesn't Know It's Wrong: An Analysis of Iterative
+                  Prompting for Reasoning Problems}",
+  howpublished = "arXiv:2310.12397",
+}
+
+@inproceedings{olausson:24,
+  author    = "Olausson, Theo X. and Inala, Jeevana Priya and Tan, Chenglong
+               and Gao, Jianfeng and Solar-Lezama, Armando",
+  year      = 2024,
+  title     = "{Is Self-Repair a Silver Bullet for Code Generation?}",
+  booktitle = "The Twelfth International Conference on Learning Representations
+               {(ICLR)}",
+}
+
+% -------------------------------------------------- Síntese e contraexemplos --
+
+@inproceedings{solarlezama:06,
+  author    = "Solar-Lezama, Armando and Tancau, Liviu and Bodik, Rastislav
+               and Seshia, Sanjit and Saraswat, Vijay",
+  year      = 2006,
+  title     = "{Combinatorial Sketching for Finite Programs}",
+  booktitle = "Proceedings of the 12th International Conference on Architectural
+               Support for Programming Languages and Operating Systems
+               {(ASPLOS)}",
+  pages     = "404--415",
+}
+
+@inproceedings{alur:13,
+  author    = "Alur, Rajeev and Bod\'{i}k, Rastislav and Juniwal, Garvit
+               and Martin, Milo M. K. and Raghothaman, Mukund
+               and Seshia, Sanjit A. and Singh, Rishabh
+               and Solar-Lezama, Armando and Torlak, Emina and Udupa, Abhishek",
+  year      = 2013,
+  title     = "{Syntax-Guided Synthesis}",
+  booktitle = "Formal Methods in Computer-Aided Design {(FMCAD)}",
+  pages     = "1--8",
+}
+
+@article{gulwani:17,
+  author  = "Gulwani, Sumit and Polozov, Oleksandr and Singh, Rishabh",
+  year    = 2017,
+  title   = "{Program Synthesis}",
+  journal = "Foundations and Trends in Programming Languages",
+  volume  = 4,
+  number  = "1-2",
+  pages   = "1--119",
+}
+
+@inproceedings{ellis:21,
+  author    = "Ellis, Kevin and Wong, Catherine and Nye, Maxwell
+               and Sabl\'{e}-Meyer, Mathias and Morales, Luc
+               and Hewitt, Luke and Cary, Luke and Solar-Lezama, Armando
+               and Tenenbaum, Joshua B.",
+  year      = 2021,
+  title     = "{DreamCoder: Bootstrapping Inductive Program Synthesis with
+               Wake-Sleep Library Learning}",
+  booktitle = "Proceedings of the 42nd ACM SIGPLAN International Conference on
+               Programming Language Design and Implementation {(PLDI)}",
+  pages     = "835--850",
+}
+
+% ------------------------------------------------------------- Estatística ----
+
+@article{mcnemar:47,
+  author  = "McNemar, Quinn",
+  year    = 1947,
+  title   = "{Note on the Sampling Error of the Difference Between Correlated
+             Proportions or Percentages}",
+  journal = "Psychometrika",
+  volume  = 12,
+  number  = 2,
+  pages   = "153--157",
+}
+
+@article{wilson:27,
+  author  = "Wilson, Edwin B.",
+  year    = 1927,
+  title   = "{Probable Inference, the Law of Succession, and Statistical
+             Inference}",
+  journal = "Journal of the American Statistical Association",
+  volume  = 22,
+  number  = 158,
+  pages   = "209--212",
+}
+
+@article{dunn:61,
+  author  = "Dunn, Olive Jean",
+  year    = 1961,
+  title   = "{Multiple Comparisons Among Means}",
+  journal = "Journal of the American Statistical Association",
+  volume  = 56,
+  number  = 293,
+  pages   = "52--64",
+}
+
+@article{pocock:77,
+  author  = "Pocock, Stuart J.",
+  year    = 1977,
+  title   = "{Group Sequential Methods in the Design and Analysis of Clinical
+             Trials}",
+  journal = "Biometrika",
+  volume  = 64,
+  number  = 2,
+  pages   = "191--199",
+}
+
+@article{button:13,
+  author  = "Button, Katherine S. and Ioannidis, John P. A. and Mokrysz, Claire
+             and Nosek, Brian A. and Flint, Jonathan and Robinson, Emma S. J.
+             and Munaf\`{o}, Marcus R.",
+  year    = 2013,
+  title   = "{Power Failure: Why Small Sample Size Undermines the Reliability
+             of Neuroscience}",
+  journal = "Nature Reviews Neuroscience",
+  volume  = 14,
+  number  = 5,
+  pages   = "365--376",
+}
+
+@article{gelman:14,
+  author  = "Gelman, Andrew and Loken, Eric",
+  year    = 2014,
+  title   = "{The Statistical Crisis in Science}",
+  journal = "American Scientist",
+  volume  = 102,
+  number  = 6,
+  pages   = "460--465",
+}
+
+@article{ioannidis:05,
+  author  = "Ioannidis, John P. A.",
+  year    = 2005,
+  title   = "{Why Most Published Research Findings Are False}",
+  journal = "PLoS Medicine",
+  volume  = 2,
+  number  = 8,
+  pages   = "e124",
+}
