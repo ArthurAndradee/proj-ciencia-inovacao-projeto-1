@@ -3,7 +3,7 @@
 Artigo em português no template AAAI 2027 (`aaai2027.sty`, `aaai2027.bst`).
 Fontes: `docs/*.md` e `README.md` do repositório.
 
-**Estado atual:** 5 páginas, 0 erros, 0 `Overfull \hbox`, 0 avisos do LaTeX.
+**Estado atual:** 4 páginas, 0 erros, 0 `Overfull \hbox`, 0 avisos do LaTeX.
 **Limite de extensão: 6 páginas.** Compile antes de acrescentar qualquer
 parágrafo, figura ou tabela.
 
@@ -45,7 +45,7 @@ que engolem o espaço seguinte e vereditos em minúscula iniciando frase.
 Resumo
 1  Introdução
 2  Trabalho Relacionado
-3  Metodologia        3.1 Formulação · 3.2 Condições · 3.3 Salvaguardas e Análise
+3  Metodologia        3.1 Formulação e Condições · 3.2 Salvaguardas e Análise
 4  Resultados         4.1 Comparação em Escala
                       4.2 A Origem das Vitórias
                       4.3 Reprodutibilidade da Ordenação
@@ -75,12 +75,13 @@ painel atualiza texto e gráficos juntos.
    três afirmações interpretativas do artigo.
 3. **Parágrafos de leitura.** Apenas os quatro marcados com `% >>> VEREDITO`
    (resumo, 4.1, 4.2, conclusão) afirmam o sinal do resultado. O título é neutro
-   e não muda.
+   e não muda. As três macros de veredito são curtas de propósito: aparecem
+   várias vezes, e frases longas ali incham o artigo inteiro.
 4. **Números que não vêm do repositório.** Dois blocos foram calculados fora do
    código do projeto:
    - **Intervalos de confiança** (Fig. 3): `metrics.py` não implementa Wilson.
-     Calculados pela Equação 2 e validados contra a medição sob o protocolo
-     anterior, cujo IC publicado em `docs/results.md` é reproduzido exatamente.
+     Calculados à parte e validados contra a medição sob o protocolo anterior,
+     cujo IC publicado em `docs/results.md` é reproduzido exatamente.
    - **Reprodutibilidade da ordenação** (Fig. 5): `python reamostragem.py`,
      versionado aqui. Subamostragem sem reposição das próprias 270 tarefas,
      20.000 repetições por tamanho, preservando o pareamento.
