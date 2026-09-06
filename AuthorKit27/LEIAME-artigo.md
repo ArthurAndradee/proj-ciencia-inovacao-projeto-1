@@ -3,8 +3,8 @@
 Artigo em português no template AAAI 2027 (`aaai2027.sty`, `aaai2027.bst`).
 Fontes: `docs/*.md` e `README.md` do repositório.
 
-**Estado atual:** compila limpo — 0 erros, 0 `Overfull \hbox`, 0 avisos do LaTeX,
-10 páginas.
+**Estado atual:** 5 páginas, 1 figura, 3 tabelas, 18 referências. Compila limpo —
+0 erros, 0 `Overfull \hbox`, 0 avisos do LaTeX.
 
 ## Compilar
 
@@ -13,9 +13,9 @@ bash compilar.sh          # pdflatex → bibtex → pdflatex ×2 + diagnóstico
 bash compilar.sh --limpo  # idem, apagando os intermediários
 ```
 
-O script usa um TeX Live isolado em `../../.tex-venv/TinyTeX` (TeX Live 2026 via
-TinyTeX), fora do repositório — não depende de nem altera nenhuma instalação de
-LaTeX do sistema. Para reinstalá-lo do zero:
+O script usa um TeX Live isolado em `../../.tex-venv/TinyTeX`, fora do
+repositório — não depende de nem altera nenhuma instalação de LaTeX do sistema.
+Para reinstalá-lo:
 
 ```bash
 mkdir -p ../../.tex-venv && cd ../../.tex-venv
@@ -23,7 +23,9 @@ curl -sLO https://github.com/rstudio/tinytex-releases/releases/download/v2026.09
 unzip -q TinyTeX-v2026.09.zip     # cria ./TinyTeX
 ```
 
-No Overleaf, subir `artigo.tex`, `artigo.bib`, `aaai2027.sty` e `aaai2027.bst`.
+Para o Overleaf, subir apenas quatro arquivos: `artigo.tex`, `artigo.bib`,
+`aaai2027.sty` e `aaai2027.bst`. Compilador pdfLaTeX, documento principal
+`artigo.tex`. Não há figuras externas — a única figura é TikZ inline.
 
 ## Validar sem compilar
 
@@ -31,126 +33,83 @@ No Overleaf, subir `artigo.tex`, `artigo.bib`, `aaai2027.sty` e `aaai2027.bst`.
 python check_artigo.py
 ```
 
-Verifica: macros do painel definidas e usadas, `\ref` com `\label`, `\cite` com
+Verifica macros do painel definidas e usadas, `\ref` com `\label`, `\cite` com
 entrada no `.bib` (e o inverso, que o AuthorKit exige), pacotes e comandos
-proibidos, ambientes balanceados, as 5 marcas de veredito, macros no fim de linha
-que engolem o espaço seguinte, e vereditos em minúscula iniciando frase. Rode
-depois de qualquer edição.
+proibidos, ambientes balanceados, as 3 marcas de veredito, macros no fim de linha
+que engolem o espaço seguinte, e vereditos em minúscula abrindo frase ou
+parágrafo. Rode depois de qualquer edição.
 
-## Estrutura (IMRaD)
+## Estrutura
 
 ```
 Resumo
 1  Introdução
 2  Trabalho Relacionado
 3  Metodologia
-   3.1 Formulação do Problema        3.5 Parâmetros de Configuração
-   3.2 Arquitetura do Solucionador   3.6 Seleção do Modelo
-   3.3 Condições Experimentais       3.7 Protocolo de Análise Estatística
-   3.4 Salvaguardas                  3.8 Procedimento Experimental
-4  Resultados
-   4.1 Decomposição Fatorial em Escala   (270 tarefas, 4 condições — resultado principal)
-   4.2 A Origem das Vitórias             (desconto da primeira geração + réplica sob P1)
-   4.3 Estabilidade das Estimativas      (subamostragem das próprias 270)
-   4.4 Evidência Qualitativa do Mecanismo
+   3.1 Formulação e Condições        (Tabela 1)
+   3.2 Salvaguardas Contra Contaminação pelo Oráculo
+   3.3 Procedimento e Análise
+4  Resultados                        (Tabelas 2 e 3)
+   4.1 A Origem das Vitórias         (Figura 1)
 5  Discussão
-   5.1 Interpretação  5.2 Implicações Práticas  5.3 Limitações e Ameaças
 6  Conclusão
 Reprodutibilidade · Referências
-Apêndice A: Execução e Histórico   (removível — ver abaixo)
 ```
 
-## As duas versões: disciplina e conferência
+O artigo sustenta duas afirmações, nesta ordem de importância:
 
-O material de processo — a medição sob o protocolo P1, as duas versões do prompt
-do Crítico, as notas de execução (chamadas, chaves, cota), o *cache* de semente
-não integrado e as execuções-piloto — está todo no **Apêndice A**, fora do corpo.
-Um interruptor no preâmbulo decide se ele sai impresso:
-
-```latex
-\apendicetrue    % entrega de disciplina — 11 páginas
-\apendicefalse   % submissão a conferência — 10 páginas
-```
-
-Troque **apenas a linha sem comentário** (as outras duas ocorrências de
-`\apendicetrue` no arquivo são texto de comentário). As menções ao apêndice no
-corpo usam `\vejaApendice{...}`, que desaparece junto — não sobra referência
-quebrada. Ambos os modos foram compilados e verificados: 0 erros, 0
-`Overfull \hbox`, 0 avisos.
-
-Toda a metodologia está na Seção 3, incluindo a diferença entre os protocolos
-**P1** (Experimento 1, Crítico sem acesso ao código candidato) e **P2**
-(Experimento 2 e pilotos, com o código) — declarada como fato metodológico em
-3.8 e como limitação em 5.3, não como narrativa de descoberta. O confundimento
-temporal (`sampling` coletado em 21/08, condições de crítico em 02–03/09) também
-é declarado nos dois lugares.
-
-O achado central do artigo é o **desconto da primeira geração** (4.3): metade das
-vitórias de qualquer condição vem de uma chamada idêntica entre elas, o
-experimento discrimina em ~1/5 da amostra, e a ordenação entre condições inverte
-quando se desconta essa parcela. Ele replica nos dois experimentos, sob os dois
-protocolos.
+1. Nenhuma das 5 comparações pré-registradas é significativa — nem sob
+   Bonferroni, nem a α = 0,05 sem correção.
+2. Cerca de metade das vitórias de qualquer condição é decidida na primeira
+   geração, idêntica entre elas; descontada essa parcela, a medição discrimina em
+   ~1/5 da amostra e a ordenação entre condições inverte.
 
 ## Atualizar quando os resultados mudarem
 
-Nenhum número está digitado solto no corpo do texto. Tudo vem do bloco
-**`PAINEL DE RESULTADOS`** no topo de `artigo.tex`, e as 5 figuras TikZ leem as
-mesmas macros — mudar o painel atualiza texto, tabelas e gráficos juntos.
+Nenhum número está digitado solto no corpo. Tudo vem do bloco
+**`PAINEL DE RESULTADOS`** no topo de `artigo.tex`, e a figura lê as mesmas
+macros — mudar o painel atualiza texto, tabelas e gráfico juntos.
 
 1. **Números.** Troque os valores no painel. Macros terminadas em `N` são a
-   versão numérica com ponto decimal, consumida pelas figuras; a macro irmã, sem
-   `N`, é a de exibição. Elas vêm em pares na mesma linha — troque as duas.
-   Valores com sinal usam a forma `\mbox{$-$14{,}8}`, que compila tanto em modo
-   texto quanto matemático; mantenha esse formato.
-2. **Vereditos.** As macros `\vereditoUm`, `\vereditoDois` e `\sigMaisProxima`,
-   logo abaixo do painel, carregam as afirmações interpretativas curtas reusadas
-   no resumo, na introdução e na conclusão.
-3. **Parágrafos de leitura.** Apenas os cinco marcados com `% >>> VEREDITO`
-   (resumo, fim da introdução, 4.1, 4.2, conclusão) afirmam o sinal do resultado.
-4. **Números que não vêm do repositório.** Dois blocos foram calculados fora do
-   código do projeto e precisam ser refeitos se os dados mudarem:
-   - Os **intervalos de confiança** (Tabela 2): `metrics.py` não implementa
-     Wilson. Calculados pela Equação 3 do artigo e validados contra a medição sob
-     P1, cujo IC publicado em `docs/results.md` é reproduzido exatamente.
-   - A **análise de estabilidade** (Figura 5): subamostragem sem reposição das
-     próprias 270 tarefas, 20.000 repetições por tamanho, preservando o
-     pareamento. Substituiu uma versão que usava os pilotos históricos de 30 e 60
-     tarefas — um deles descartado e refeito, o que os torna evidência frágil.
-4. **Título.** O título em uso **afirma o achado**, então precisa mudar se o
-   sinal inverter. Quatro alternativas estão comentadas logo acima do `\title`,
-   sendo as duas últimas neutras (sobrevivem a uma inversão).
+   versão numérica com ponto decimal, consumida pela figura; a irmã sem `N` é a
+   de exibição. Vêm em pares na mesma linha — troque as duas. Valores com sinal
+   usam a forma `\mbox{$-$14{,}8}`, que compila em modo texto e matemático;
+   mantenha o formato.
+2. **Vereditos.** `\vereditoUm` e `\vereditoDois`, logo abaixo do painel,
+   carregam as duas afirmações reusadas no resumo, nos resultados e na conclusão.
+   Ambas começam em minúscula, para uso no meio de frase — o validador avisa se
+   alguma passar a abrir frase ou parágrafo.
+3. **Parágrafos de leitura.** Apenas os três marcados com `% >>> VEREDITO`
+   (resumo, resultado principal, conclusão) afirmam o sinal do resultado. O
+   título é neutro e não precisa mudar.
+4. **Números calculados fora do repositório.** Dois blocos precisam ser refeitos
+   se os dados mudarem:
+   - Os **intervalos de confiança** (Tabela 3): `metrics.py` não implementa
+     Wilson. Calculados pela fórmula padrão e validados contra a medição de duas
+     condições sobre as mesmas tarefas, cujo IC publicado em `docs/results.md` é
+     reproduzido exatamente.
+   - A **estabilidade sob subamostragem** (dois números na Discussão): rode
+     `python reamostragem.py`, que lê `results/runs/critic-official/`.
 
 ## Desvios do AuthorKit, declarados
 
-1. **Figuras em TikZ inline.** O kit não proíbe `tikz` (proíbe `pgfplots`), mas
-   recomenda pré-gerar figuras fora do LaTeX e importá-las com
-   `\includegraphics`. A escolha por TikZ é o que permite que as figuras leiam o
-   painel de resultados. Para conformidade estrita, compilar cada `tikzpicture`
-   como `standalone` e trocar por `\includegraphics`.
+1. **Figura em TikZ inline.** O kit não proíbe `tikz` (proíbe `pgfplots`), mas
+   recomenda pré-gerar figuras e importá-las com `\includegraphics`. A escolha
+   por TikZ é o que permite que a figura leia o painel de resultados.
 2. **`\renewenvironment{abstract}`.** O `aaai2027.sty` escreve "Abstract"
    literalmente e ignora `\abstractname`. O bloco no preâmbulo é cópia exata da
    definição do estilo trocando só a palavra por "Resumo" — nenhuma métrica de
    fonte, espaçamento ou margem muda. **Apague-o** para submeter à AAAI.
 3. **`babel` é proibido**, então não há hifenização portuguesa e os nomes dos
-   flutuantes são redefinidos à mão. Se a restrição não se aplicar,
-   `\usepackage[brazil]{babel}` melhora a tipografia.
-4. **`\setlength{\tabcolsep}{4pt}`** em cinco tabelas, local a cada uma. Não é
-   comando de layout de página e não está na lista de proibidos; é o que mantém
-   as tabelas dentro da coluna.
+   flutuantes são redefinidos à mão.
+4. **`\setlength{\tabcolsep}{4pt}`** local a cada tabela. Não é comando de layout
+   de página nem está na lista de proibidos; é o que mantém as tabelas dentro da
+   coluna.
 
 ## Pendências
 
 - **Autoria.** Está como `Anonymous Submission` (opção `submission` do estilo).
   Para a versão identificada, trocar por `\author{...}` / `\affiliations{...}` e
   remover a opção `submission`.
-- **Extensão.** 10 páginas. Acima do limite típico de uma submissão AAAI, mas
-  provavelmente adequado a uma nota técnica de disciplina. Se precisar cortar, a
-  ordem sugerida é: a Seção 4.5 (Análise Qualitativa), a Tabela 1 (cujo conteúdo
-  o texto já descreve) e a Tabela 3 (a família de comparações, também descrita
-  no texto).
-- **`SeedCache` não integrado.** O artigo aponta o *commit* `19e492c` (branch
-  `feat/project-scaffolding`) como a correção escrita e não aplicada para o
-  confundimento dominante. Se ele for integrado e os experimentos refeitos, a
-  Seção 4.3 muda de "limitação com correção conhecida" para resultado.
 - **Uso de IA.** O registro proporcional pendente no `README.md` (§6 da
   especificação) não foi incorporado ao artigo — é autoavaliação da equipe.

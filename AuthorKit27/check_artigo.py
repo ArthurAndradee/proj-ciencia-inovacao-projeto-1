@@ -123,13 +123,21 @@ for m in re.finditer(r"\\([A-Za-z]+)[ \t]*\n(?=[^\s%])", CORPO):
 for macro in ("vereditoUm", "vereditoDois"):
     corpo_macro = re.search(r"\\newcommand\{\\" + macro + r"\}\{(.)", TEX)
     if corpo_macro and corpo_macro.group(1).islower():
+        # após pontuação final...
         for m in re.finditer(r"([.!?])\s+\\" + macro + r"\b", CORPO):
             linha = CORPO[: m.start()].count("\n") + 1
             erro(f"\\{macro} (começa em minúscula) inicia frase após "
                  f"'{m.group(1)}' no corpo, linha ~{linha}")
+        # ...e no início de parágrafo (linha em branco, ou logo após a marca
+        # de veredito), que a regra acima não pega
+        for m in re.finditer(r"(?:\n\s*\n|% >>> VEREDITO[^\n]*\n)\s*\\"
+                             + macro + r"\b", CORPO):
+            linha = CORPO[: m.start()].count("\n") + 2
+            erro(f"\\{macro} (começa em minúscula) abre parágrafo "
+                 f"no corpo, linha ~{linha}")
 n_veredito = CORPO.count("% >>> VEREDITO")
-if n_veredito != 5:
-    erro(f"esperava 5 marcas '% >>> VEREDITO' no corpo, encontrei {n_veredito}")
+if n_veredito != 3:
+    erro(f"esperava 3 marcas '% >>> VEREDITO' no corpo, encontrei {n_veredito}")
 
 # ---------------------------------------------------------------- saída -----
 if problemas:
