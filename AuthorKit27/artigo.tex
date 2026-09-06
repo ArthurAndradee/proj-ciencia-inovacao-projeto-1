@@ -5,21 +5,21 @@
 %  ============================================================================
 %  COMO ATUALIZAR ESTE ARTIGO QUANDO OS RESULTADOS MUDAREM
 %  ============================================================================
-%  Todo número do texto, das tabelas e da figura vem de um \newcommand no
+%  Todo número do texto, das tabelas e das figuras vem de um \newcommand no
 %  PAINEL DE RESULTADOS abaixo. Nada é digitado solto no corpo.
 %
 %   1. Troque os valores no PAINEL. Macros terminadas em "N" são a versão
-%      numérica (ponto decimal) lida pela figura; a irmã sem "N" é a de
+%      numérica (ponto decimal) usada pelas figuras; a irmã, sem "N", é a de
 %      exibição (vírgula decimal). Vêm em pares na mesma linha — troque as duas.
-%      Valores com sinal usam \mbox{$-$X{,}Y}, que compila em texto e em
-%      matemática; mantenha o formato.
-%   2. Troque \vereditoUm e \vereditoDois, logo abaixo do painel: são as duas
-%      afirmações curtas reusadas no resumo, nos resultados e na conclusão.
-%   3. Reescreva apenas os três parágrafos marcados com  % >>> VEREDITO
-%      (resumo, resultado principal, conclusão). O resto — motivação, trabalho
-%      relacionado, metodologia, limitações — independe do sinal do resultado,
-%      e o título é neutro quanto a ele.
-%   4. Rode check_artigo.py depois de qualquer edição.
+%      Valores com sinal usam \mbox{$-$14{,}8}, que compila em texto e em
+%      modo matemático. Mantenha esse formato.
+%   2. Troque \vereditoUm, \vereditoDois e \vereditoTres, logo abaixo do painel.
+%   3. Reescreva apenas os quatro parágrafos marcados com % >>> VEREDITO.
+%      O resto — motivação, trabalho relacionado, metodologia, limitações — é
+%      independente do sinal do resultado. O título também é.
+%
+%  ALVO DE EXTENSÃO: 6 páginas. Antes de acrescentar qualquer parágrafo, figura
+%  ou tabela, compile e confira com AuthorKit27/compilar.sh.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \documentclass[letterpaper]{article} % DO NOT CHANGE THIS
@@ -33,21 +33,25 @@
 \frenchspacing  % DO NOT CHANGE THIS
 
 \usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amsfonts} % \mathbb na Equação 1
 \usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit}
 
 \pdfinfo{
 /TemplateVersion (2027.1)
 }
 
 % O AuthorKit proíbe babel. Como o artigo está em português, os nomes dos
-% flutuantes são redefinidos à mão — isto não altera layout, fonte nem
-% espaçamento. O aaai2027.sty escreve "Abstract" literalmente e ignora
-% \abstractname, daí a cópia exata do ambiente trocando só a palavra.
-% APAGUE o \renewenvironment para submeter à AAAI.
+% flutuantes são redefinidos à mão — não altera layout, fonte nem espaçamento.
 \renewcommand{\figurename}{Figura}
 \renewcommand{\tablename}{Tabela}
 \renewcommand{\abstractname}{Resumo}
 \renewcommand{\refname}{Referências}
+
+% O aaai2027.sty escreve "Abstract" literalmente e ignora \abstractname. O bloco
+% abaixo é cópia exata da definição do estilo (l. 208-218) trocando só a palavra;
+% nenhuma métrica muda. APAGUE se for submeter à AAAI.
 \renewenvironment{abstract}{%
   \centerline{\bf \abstractname}%
   \vspace{0.5ex}%
@@ -73,9 +77,8 @@
 \newcommand{\alfaBonf}{0{,}01}
 \newcommand{\numComparacoes}{5}
 
-% ---- Medição principal: 270 tarefas, quatro condições -----------------------
+% ---- Medição principal: 270 tarefas, 4 condições ----------------------------
 \newcommand{\An}{270}
-\newcommand{\Adata}{02--03/09/2026}
 \newcommand{\AsampRes}{88} \newcommand{\AsampAcc}{32{,}6}
 \newcommand{\AcritRes}{93} \newcommand{\AcritAcc}{34{,}4}
 \newcommand{\AnoorRes}{80} \newcommand{\AnoorAcc}{29{,}6}
@@ -86,26 +89,26 @@
 \newcommand{\AnoorProg}{3{,}27} \newcommand{\AcegisProg}{3{,}34}
 \newcommand{\AsampTok}{28{,}0} \newcommand{\AcritTok}{48{,}1}
 \newcommand{\AnoorTok}{45{,}8} \newcommand{\AcegisTok}{48{,}8}
-\newcommand{\AreducaoProg}{40}
 \newcommand{\AtokExcessoMin}{63} \newcommand{\AtokExcessoMax}{74}
+\newcommand{\AreducaoProg}{40}
 \newcommand{\AdeltaCritSamp}{\mbox{$+$1{,}9}}
-\newcommand{\Acriticas}{1.844} \newcommand{\Aleaks}{0}
+\newcommand{\Aleaks}{0} \newcommand{\Acriticas}{1.844}
 \newcommand{\CegisConf}{630/630}
 
-% ---- As cinco comparações pré-registradas -----------------------------------
-% IC de Wilson sobre a proporção de discordâncias, convertido para pontos
-% percentuais de acurácia. Reproduz exatamente o IC publicado da medição de
-% duas condições sobre as mesmas tarefas.
+% ---- As 5 comparações pré-registradas ---------------------------------------
+% IC de Wilson pela Equação 2, validado contra a medição sob P1, cujo IC
+% publicado em docs/results.md é reproduzido exatamente.
 \newcommand{\CumDisc}{51}  \newcommand{\CumSplit}{$23{\times}28$} \newcommand{\Cump}{0{,}5758}
-\newcommand{\CumLo}{\mbox{$-$3{,}3}}  \newcommand{\CumHi}{\mbox{$+$6{,}7}}
+\newcommand{\CumLoN}{-3.3} \newcommand{\CumHiN}{6.7}
 \newcommand{\CdoisDisc}{54}\newcommand{\CdoisSplit}{$31{\times}23$} \newcommand{\Cdoisp}{0{,}3409}
-\newcommand{\CdoisLo}{\mbox{$-$7{,}9}}\newcommand{\CdoisHi}{\mbox{$+$2{,}3}}
+\newcommand{\CdoisLoN}{-7.9}\newcommand{\CdoisHiN}{2.3}
 \newcommand{\CtresDisc}{47}\newcommand{\CtresSplit}{$26{\times}21$} \newcommand{\Ctresp}{0{,}5601}
-\newcommand{\CtresLo}{\mbox{$-$6{,}5}}\newcommand{\CtresHi}{\mbox{$+$3{,}0}}
+\newcommand{\CtresLoN}{-6.5}\newcommand{\CtresHiN}{3.0}
 \newcommand{\CquatroDisc}{47}\newcommand{\CquatroSplit}{$30{\times}17$}\newcommand{\Cquatrop}{0{,}0789}
 \newcommand{\CquatroLo}{\mbox{$-$9{,}1}}\newcommand{\CquatroHi}{\mbox{$+$0{,}2}}
+\newcommand{\CquatroLoN}{-9.1}\newcommand{\CquatroHiN}{0.2}
 \newcommand{\CcincoDisc}{54}\newcommand{\CcincoSplit}{$32{\times}22$} \newcommand{\Ccincop}{0{,}2203}
-\newcommand{\CcincoLo}{\mbox{$-$8{,}5}}\newcommand{\CcincoHi}{\mbox{$+$1{,}6}}
+\newcommand{\CcincoLoN}{-8.5}\newcommand{\CcincoHiN}{1.6}
 \newcommand{\pMenor}{0{,}0789}
 
 % ---- Desconto da primeira geração -------------------------------------------
@@ -114,27 +117,66 @@
 \newcommand{\GnoorTot}{80} \newcommand{\GnoorUm}{35} \newcommand{\GnoorCiclo}{45}
 \newcommand{\GcegisTot}{83}\newcommand{\GcegisUm}{32}\newcommand{\GcegisCiclo}{51}
 \newcommand{\RpMenor}{0{,}2962} \newcommand{\RpMaior}{1{,}0000}
-\newcommand{\Rn}{207--216}
 \newcommand{\SeedEconomia}{810}
-% réplica sob a medição anterior de duas condições
-\newcommand{\Bciclo}{44} \newcommand{\BdiscrimN}{206}
 
-% ---- Estabilidade sob subamostragem das próprias 270 ------------------------
-% Gerado por AuthorKit27/reamostragem.py.
+% ---- Réplica sob o protocolo P1 (2 condições, mesmas 270 tarefas) -----------
+\newcommand{\BsampRes}{88} \newcommand{\BcritRes}{86}
+\newcommand{\BsampPrimeira}{44} \newcommand{\BcritPrimeira}{42}
+\newcommand{\BsampCiclo}{44} \newcommand{\BcritCiclo}{44}
+\newcommand{\BdiscrimN}{206}
+\newcommand{\Bdelta}{\mbox{$-$0{,}7}} \newcommand{\Bp}{0{,}8877}
+\newcommand{\BicBaixo}{\mbox{$-$5{,}6}} \newcommand{\BicAlto}{\mbox{$+$4{,}3}}
+\newcommand{\BicAltoAbs}{4{,}3}
+
+% ---- Estabilidade: subamostragem sem reposição das próprias 270 -------------
+% Gerado por AuthorKit27/reamostragem.py sobre results/runs/critic-official/.
 \newcommand{\SubRep}{20.000}
 \newcommand{\SubNa}{30} \newcommand{\SubNb}{60}
-\newcommand{\SubDirA}{51} \newcommand{\SubOrdA}{8} \newcommand{\SubOrdB}{12}
+\newcommand{\SubDirA}{51} \newcommand{\SubDirAN}{51.4}
+\newcommand{\SubDirB}{58} \newcommand{\SubDirBN}{58.2}
+\newcommand{\SubDirCN}{62.9} \newcommand{\SubDirDN}{71.1} \newcommand{\SubDirEN}{79.9}
+\newcommand{\SubOrdA}{8}  \newcommand{\SubOrdAN}{7.7}
+\newcommand{\SubOrdB}{12} \newcommand{\SubOrdBN}{11.6}
+\newcommand{\SubOrdCN}{17.4} \newcommand{\SubOrdDN}{27.2} \newcommand{\SubOrdEN}{41.6}
+\newcommand{\SubBandaAlo}{\mbox{$-$10{,}0}} \newcommand{\SubBandaAhi}{\mbox{$+$13{,}3}}
+\newcommand{\ProjN}{91} \newcommand{\ProjPextrapolado}{0{,}0027}
+\newcommand{\ProjPfinal}{0{,}0789}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  VEREDITOS — as afirmações reusadas. Se o sinal do resultado mudar, comece
-%  por aqui, depois pelos três parágrafos marcados % >>> VEREDITO.
+%  VEREDITOS — as três afirmações interpretativas do artigo.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\vereditoUm}{\textbf{nenhuma} das \numComparacoes{} comparações
+\newcommand{\vereditoUm}{a revisão guiada por oráculo \textbf{não} superou a
+amostragem independente}
+\newcommand{\vereditoDois}{\textbf{nenhuma} das \numComparacoes{} comparações
 pré-registradas é significativa — nem sob Bonferroni, nem a $\alpha = 0{,}05$
 sem correção}
-\newcommand{\vereditoDois}{cerca de metade das vitórias de qualquer condição é
+\newcommand{\vereditoTres}{cerca de metade das vitórias de qualquer condição é
 decidida na primeira geração, que é idêntica entre elas}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Estilo local das figuras TikZ
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tikzset{
+  cx/.style={draw, rounded corners=2pt, align=center, font=\scriptsize,
+             inner sep=3pt, minimum height=5.5mm},
+  agente/.style={cx, fill=black!10, minimum width=19mm},
+  proc/.style={cx, fill=white, minimum width=19mm},
+  dec/.style={draw, align=center, font=\scriptsize, rounded corners=6pt,
+              inner sep=3pt, fill=white},
+  oraculo/.style={cx, dashed, fill=black!4},
+  fl/.style={-{Latex[length=1.4mm]}, thin},
+  flt/.style={-{Latex[length=1.4mm]}, thin, dashed},
+  rot/.style={font=\scriptsize, inner sep=1.5pt, fill=white},
+  cel/.style={draw, rounded corners=2pt, align=center, font=\scriptsize,
+              text width=25mm, minimum height=12mm, inner sep=2pt},
+  celcheia/.style={cel, fill=black!10},
+  celvazia/.style={cel, dashed, text=black!55},
+  eixo/.style={font=\scriptsize\bfseries, align=center, inner sep=1.5pt}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  TÍTULO — neutro quanto ao resultado; não muda se o sinal inverter.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Alocação de Computação de Inferência na Síntese de Programas com
 Modelos de Linguagem}
 
@@ -148,196 +190,262 @@ Modelos de Linguagem}
 Um orçamento fixo de chamadas a um modelo de linguagem admite duas alocações
 incompatíveis: \emph{diversificar}, gerando $N$ candidatos independentes, ou
 \emph{iterar}, revisando um único candidato com feedback. A literatura relata
-ganhos para a segunda via, mas também falhas sistemáticas de autocorreção — e as
+ganhos para a segunda via e também falhas sistemáticas de autocorreção, e as
 duas leituras são difíceis de separar porque, sem informação externa, o revisor
-não sabe que errou. Removemos esse confundimento por construção, concedendo à
-via iterativa uma vantagem que ela não teria em produção: um Agente Crítico que
-enxerga o gabarito do par de teste e devolve apenas contradições em linguagem
-natural, sem propor solução e sem participar da seleção do candidato final. Ele
-opera, assim, como um limite superior otimista da via iterativa. Em \An{}
-tarefas do ARC-AGI-1, com quatro condições sob orçamento igualado,
+não sabe que errou. Removemos esse confundimento concedendo à via iterativa uma
+vantagem que ela não teria em produção: um Agente Crítico que enxerga o gabarito
+do par de teste e devolve apenas contradições em linguagem natural, sem propor
+solução e sem participar da seleção do candidato final — um limite superior
+otimista da via iterativa.
 % >>> VEREDITO (resumo)
-\vereditoUm{}. O achado mais transferível independe disso: \vereditoDois{}.
-Descontada essa parcela, a medição discrimina em cerca de um quinto da amostra e
-a ordenação entre as condições inverte em relação ao número bruto — um
-confundimento herdado por qualquer comparação entre esquemas de inferência que
-partam do mesmo \emph{prompt}, e que nenhuma métrica agregada revela.
+Em \An{} tarefas do ARC-AGI-1, sob orçamento igualado, \vereditoDois{}. O achado
+mais transferível independe do sinal do efeito: \vereditoTres{}. Descontada essa
+parcela, a medição discrimina em cerca de um quinto da amostra e a ordenação
+entre as condições inverte em relação ao número bruto. Por subamostragem do
+mesmo conjunto, em \SubNa{} tarefas a direção observada se reproduz em
+\SubDirA\% das vezes e a ordenação completa das quatro condições em
+\SubOrdA\% — um confundimento herdado por qualquer comparação entre esquemas de
+inferência que partam do mesmo \emph{prompt}, e que nenhuma métrica agregada
+revela.
 \end{abstract}
 
 \section{Introdução}
 
 Uma fração substancial do desempenho recente em tarefas de raciocínio vem de
-escalar a computação no momento da inferência, e não o modelo
-\citep{snell:24,brown:24}. Isso transforma uma questão antes implícita em decisão
-de engenharia com consequência direta de custo: dado um orçamento fixo de
-chamadas, como alocá-lo?
+escalar a computação no momento da inferência, e não os parâmetros do modelo
+\citep{snell:24,brown:24}. Isso converte uma questão antes implícita em decisão
+de engenharia com custo direto: dado um orçamento fixo de chamadas, como
+alocá-lo?
 
 Há duas respostas estruturalmente distintas. \textbf{Diversificar} é gerar $N$
 programas independentes e selecionar o melhor por um verificador barato — a
-receita de \emph{pass@k} em geração de código \citep{chen:21}, da filtragem
-massiva do AlphaCode \citep{li:22} e da autoconsistência em raciocínio
-\citep{wang:23}. \textbf{Iterar} é gastar o mesmo orçamento revisando um único
-candidato à luz de feedback, como em \emph{self-debugging} \citep{chen:24},
-\textsc{Self-Refine} \citep{madaan:23} e \textsc{Reflexion} \citep{shinn:23}.
+receita de \emph{pass@k} em geração de código \citep{chen:21} e da filtragem
+massiva do AlphaCode \citep{li:22}. \textbf{Iterar} é gastar o mesmo orçamento
+revisando um único candidato à luz de feedback, como em \emph{self-debugging}
+\citep{chen:24}, \textsc{Self-Refine} \citep{madaan:23} e \textsc{Reflexion}
+\citep{shinn:23}.
 
 A evidência sobre a segunda via é contraditória. Os trabalhos originais relatam
 ganhos expressivos; réplicas controladas encontram que grande parte deles
 desaparece quando o orçamento é igualado, ou quando o modelo precisa detectar
 sozinho que errou \citep{huang:24,stechly:23,olausson:24}. A explicação candidata
-mais simples é que autocrítica não é crítica: um modelo sem acesso a informação
-externa sobre o próprio erro tende a reafirmar a resposta que já produziu. Sob
-essa hipótese, o fator limitante não é a estratégia iterativa, e sim a qualidade
-do canal de feedback.
+mais simples é que autocrítica não é crítica: sem informação externa sobre o
+próprio erro, o modelo tende a reafirmar a resposta que já produziu. Sob essa
+hipótese, o fator limitante não é a estratégia iterativa, mas a qualidade do
+canal de feedback.
 
 Testamos essa hipótese maximizando exatamente a variável que ela aponta. Nosso
-Agente Crítico enxerga o gabarito do par de teste, que o Gerador nunca vê, e sua
-função é restrita por construção: não propõe solução, não escreve código e não
-reproduz grades, limitando-se a apontar contradições entre a regra enunciada, o
-programa candidato e a realidade. O desenho é, portanto, deliberadamente
-favorável à via iterativa — o crítico dispõe de informação privilegiada que
-nenhum sistema autônomo teria e ainda assim consome o mesmo orçamento de
-chamadas. Ele funciona como um \textbf{limite superior otimista}, o que torna a
-leitura do resultado informativa nos dois sentidos: se o crítico vencer, o
-gargalo da autocorreção é informacional; se não vencer, a vantagem atribuída ao
+Agente Crítico enxerga o gabarito do par de teste, que o Gerador nunca vê, e é
+restrito por construção: não propõe solução, não escreve código e não reproduz
+grades, limitando-se a apontar em que pontos a regra enunciada e o programa
+candidato contradizem a realidade. Um filtro automático redige qualquer grade ou
+código que escape em sua saída, e o gabarito nunca participa do critério de
+parada nem da seleção do candidato final. O desenho é, portanto, deliberadamente
+favorável à via iterativa: o crítico dispõe de informação privilegiada que nenhum
+sistema autônomo teria e ainda assim consome o mesmo orçamento que a amostragem.
+Ele funciona como \textbf{limite superior otimista}, o que torna a leitura
+informativa nos dois sentidos — se nem ele vencer, a vantagem atribuída ao
 feedback iterativo fica sob suspeita muito além deste arranjo.
 
 Avaliamos no ARC-AGI-1 \citep{chollet:19}, em que cada tarefa traz alguns pares
-entrada\,$\rightarrow$\,saída de demonstração e exige inferir a transformação
-subjacente. O domínio é adequado por três razões: a resposta é verificável
-exatamente, o que elimina a ambiguidade de métricas parciais; os pares de
-demonstração fornecem um verificador barato e honesto que ambas as estratégias
-podem usar sem tocar no gabarito; e o \emph{benchmark} resiste a modelos de
-propósito geral \citep{gendron:24}, deixando espaço de medição.
+entrada\,$\rightarrow$\,saída de demonstração e exige inferir a transformação.
+O domínio é adequado porque a resposta é verificável exatamente, os pares de
+demonstração fornecem um verificador barato que ambas as estratégias usam sem
+tocar no gabarito, e o \emph{benchmark} permanece resistente.
 
-Contribuímos com um protocolo pareado de orçamento igualado que isola a decisão
-diversificar \emph{vs.}\ iterar, com salvaguardas auditáveis contra contaminação
-pelo oráculo; com uma decomposição fatorial do mecanismo em dois eixos — acesso
-ao oráculo e forma do feedback — em \An{} tarefas; e com a quantificação de
-quanto de uma comparação entre arquiteturas de agentes é de fato atribuível à
-arquitetura.
+\paragraph{Contribuições.} Um protocolo pareado com orçamento igualado e
+salvaguardas auditáveis contra contaminação pelo oráculo; uma decomposição
+fatorial do mecanismo em dois eixos — acesso ao oráculo e forma do feedback — em
+\An{} tarefas, com \numComparacoes{} comparações pré-registradas sob correção de
+Bonferroni; e a quantificação de quanto de uma comparação entre arquiteturas de
+agentes é atribuível à arquitetura, com a medida correspondente de
+reprodutibilidade da ordenação.
 
 \section{Trabalho Relacionado}
 
 Amostrar muitos candidatos e filtrar é a estratégia de referência em síntese de
-programas com modelos de linguagem \citep{chen:21,li:22}, e trabalhos recentes
-caracterizam a curva: a cobertura cresce de forma previsível com o número de
-amostras \citep{brown:24}, e há regimes em que alocar computação de inferência
-supera aumentar o modelo \citep{snell:24}. Nossa condição \texttt{sampling} é uma
+programas desde o Codex \citep{chen:21}; \citet{li:22} levaram a ideia ao limite,
+e trabalhos recentes caracterizam a curva de cobertura \citep{brown:24} e os
+regimes em que essa alocação supera aumentar o modelo \citep{snell:24}. Nossa
+condição \texttt{sampling} é uma
 instância deliberadamente simples dessa família, com o verificador mais honesto
-que o ARC oferece sem custo — os próprios pares de demonstração —, o que mantém a
+que o ARC oferece — os próprios pares de demonstração —, o que mantém a
 comparação livre de qualquer componente treinado.
 
-A via iterativa realimenta o modelo com o resultado da execução ou com uma
-crítica textual e solicita revisão \citep{chen:24,madaan:23,shinn:23}. A
-contestação identifica a qualidade do sinal externo como fator determinante:
-\citet{huang:24} argumentam que modelos não corrigem raciocínio sem sinal
+A via iterativa realimenta o modelo com o resultado da execução \citep{chen:24}
+ou com crítica gerada por ele mesmo \citep{madaan:23,shinn:23}. A contestação foi
+rápida: \citet{huang:24} argumentam que modelos não corrigem raciocínio sem sinal
 externo, \citet{stechly:23} mostram que a melhora aparente provém do verificador
-embutido no protocolo, e \citet{olausson:24} constatam que o auto-reparo só
-compensa quando o crítico é mais capaz que o gerador. Nosso desenho toma essa
-variável e a maximiza. Guiar síntese por contraexemplos, por sua vez, antecede os
-modelos de linguagem: em CEGIS, um verificador devolve ao sintetizador uma
-entrada concreta em que o candidato falha \citep{solarlezama:06}. Nossa condição
-\texttt{critic\_cegis} transpõe esse protocolo para o registro de linguagem
-natural, o que permite variar a forma do feedback com o conteúdo informacional
-constante.
+embutido no protocolo, e \citet{olausson:24} constatam que o auto-reparo em
+código só compensa quando o crítico é mais capaz que o gerador. Nosso desenho
+toma a variável que essa literatura identifica como determinante — a qualidade do
+sinal externo — e a maximiza. A ideia de guiar síntese por contraexemplos é
+anterior aos modelos de linguagem \citep{solarlezama:06}; nossa condição
+\texttt{critic\_cegis} a transpõe para linguagem natural, permitindo variar a
+forma do feedback com o conteúdo informacional constante.
 
 \section{Metodologia}
 
-\subsection{Formulação e Condições}
+\subsection{Formulação}
 
-Uma tarefa do ARC-AGI-1 traz pares de demonstração $\mathcal{D}_t$ e um par de
-teste $(x^\star_t, y^\star_t)$. Um solucionador recebe $\mathcal{D}_t$ e
-$x^\star_t$ e produz um programa $\pi$; a tarefa é resolvida se e somente se
-$\pi(x^\star_t) = y^\star_t$ com igualdade exata da grade. O recurso controlado é
-o \textbf{orçamento de chamadas} $B$: o número máximo de requisições ao modelo por
-tarefa, somando todos os papéis de agente. A igualdade de $B$ entre as condições
-é o controle central — sem ela, a condição com mais recursos venceria por dispor
-de mais recursos.
+Uma tarefa $t$ é um par $(\mathcal{D}_t, (x^\star_t, y^\star_t))$, em que
+$\mathcal{D}_t$ são os pares de demonstração e $(x^\star_t, y^\star_t)$ o par de
+teste; grades são matrizes de inteiros em $\{0,\dots,9\}$. Um solucionador recebe
+$\mathcal{D}_t$ e $x^\star_t$ e produz um programa $\pi$ em Python. A tarefa é
+resolvida se e somente se $\pi(x^\star_t) = y^\star_t$ com igualdade exata da
+grade inteira.
 
-Em todas as condições, o Gerador propõe uma regra em linguagem natural e um
-programa, que é executado em \emph{sandbox} sobre os pares de demonstração. Se
-todos forem reproduzidos, o laço termina; caso contrário, e havendo orçamento, o
-Crítico examina o candidato e devolve feedback ao Gerador. A
-Tabela~\ref{tab:condicoes} define as quatro condições comparadas.
-\texttt{sampling} aloca o orçamento em largura: cada chamada é uma conversa nova
-com o mesmo \emph{prompt}, e ao final vence o candidato que reproduz mais pares
-de demonstração. As três condições de crítico alocam em profundidade, gastando
-duas chamadas por ciclo, e variam um eixo cada em relação a \texttt{critic}:
-\texttt{critic\_no\_oracle} nunca vê $y^\star_t$, isolando quanto do efeito vem
-da estrutura da crítica sem informação privilegiada; \texttt{critic\_cegis} vê
-$y^\star_t$ mas responde com um contraexemplo e uma classe de correção em
-vocabulário fechado, isolando o efeito da forma do feedback.
+O recurso controlado é o \textbf{orçamento de chamadas} $B$: o número máximo de
+requisições ao modelo por tarefa, somando todos os papéis. Comparamos políticas
+$\mathcal{S}$ (diversificar) e $\mathcal{C}$ (iterar) de gasto de $B$:
 
-\begin{table}[t]
+\begin{equation}
+\Delta = \mathbb{E}_{t}\big[\mathbf{1}[\mathcal{C} \text{ resolve } t]\big]
+       - \mathbb{E}_{t}\big[\mathbf{1}[\mathcal{S} \text{ resolve } t]\big]
+\;>\; 0 .
+\label{eq:delta}
+\end{equation}
+
+\noindent Manter $B$ idêntico é o controle experimental central: sem ele, a
+condição com mais recursos venceria por dispor de mais recursos.
+
+\begin{figure}[t]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
- & \texttt{samp} & \texttt{critic} & \texttt{no\_or} & \texttt{cegis} \\
-\midrule
-Feedback            & ---   & prosa & prosa & estrut. \\
-Vê $y^\star_t$      & não   & sim   & não   & sim \\
-Histórico (Gerador) & não   & sim   & sim   & sim \\
-Temperatura         & 0{,}8 & 0{,}2 & 0{,}2 & 0{,}2 \\
-Chamadas por ciclo  & 1     & 2     & 2     & 2 \\
-Programas/tarefa    & \orcamento{} & 4 & 4 & 4 \\
-Desempate           & 1\textsuperscript{a} & últ. & últ. & últ. \\
-\bottomrule
-\end{tabular}
-\caption{As quatro condições (\texttt{no\_or} = \texttt{critic\_no\_oracle},
-\texttt{cegis} = \texttt{critic\_cegis}), todas sob o mesmo orçamento $B$ de
-chamadas. A temperatura é assimétrica por necessidade: a $T = 0{,}2$ as $N$
-amostras colapsam em programas quase idênticos e o \emph{best-of-N} degenera em
-uma tentativa repetida. ``Desempate'' indica qual candidato vence quando há
-empate na consistência com os pares de demonstração — a última iteração onde há
-progressão, a primeira amostra onde não há.}
-\label{tab:condicoes}
-\end{table}
+\begin{tikzpicture}[node distance=4.5mm]
+  \node[proc] (task) {tarefa: pares de treino\\ + entrada do teste};
+  \node[agente, below=of task] (gen) {\textbf{Gerador} (LLM)\\ propõe regra + programa};
+  \node[proc, below=of gen] (exec) {\textbf{Executor} (sandbox)\\ roda nos pares de treino};
+  \node[dec, below=of exec] (stop) {todos os pares de treino\\ reproduzidos?};
+  \node[agente, below=9mm of stop] (crit) {\textbf{Crítico} (LLM)\\ aponta contradições};
+  \node[proc, below=of crit] (guard) {filtro anti-vazamento\\ redige grades e código};
+  \node[oraculo, right=7mm of crit] (orac) {oráculo\\ $y^\star_t$};
+  \node[proc, right=7mm of stop] (final) {avaliação final\\ $\pi(x^\star_t) \overset{?}{=} y^\star_t$};
 
-\subsection{Salvaguardas Contra Contaminação pelo Oráculo}
+  \draw[fl] (task) -- (gen);
+  \draw[fl] (gen) -- (exec);
+  \draw[fl] (exec) -- (stop);
+  \draw[fl] (stop) -- node[rot, pos=0.45] {não} (crit);
+  \draw[fl] (crit) -- (guard);
+  \draw[flt] (orac) -- (crit);
+  \draw[fl] (guard.west) -- ++(-0.75,0) |- (gen.west);
+  \draw[fl] (stop) -- node[rot, pos=0.45] {sim} (final);
+\end{tikzpicture}
+\caption{Arquitetura do solucionador. O Gerador nunca vê $y^\star_t$; o Crítico o
+vê (linha tracejada) apenas nas condições que o concedem. A restrição central é
+que $y^\star_t$ não decide nada: o critério de parada e a seleção do candidato
+final consideram apenas os pares de demonstração, e a avaliação final roda uma
+única vez, ao término do laço, exclusivamente para medir.}
+\label{fig:pipeline}
+\end{figure}
 
-Conceder o gabarito a um agente cria três riscos, tratados por mecanismos
-distintos. \textbf{O gabarito não seleciona}: o critério de parada e a escolha do
-candidato final olham apenas para os pares de demonstração, nas quatro condições,
-e o par de teste é executado uma única vez ao final, apenas para medir. Se o laço
-parasse ao acertar o teste, a taxa de acerto seria um limite superior de oráculo,
-não uma medida de desempenho. \textbf{O gabarito não vaza}: o feedback passa por
-um filtro que redige linhas compostas apenas de inteiros e qualquer código antes
-de chegar ao Gerador, com a resposta bruta preservada para auditoria e cada
-redação contabilizada — o vazamento deixa de depender da cooperação do modelo e
-torna-se mensurável. \textbf{O Crítico não resolve}: ele é reinstanciado a cada
-rodada, sem histórico, de modo que não pode construir uma solução ao longo do
-diálogo e virar um segundo solucionador.
+\subsection{Condições Experimentais}
 
-\subsection{Procedimento e Análise}
+A Figura~\ref{fig:pipeline} mostra o laço comum. \texttt{sampling} aloca o
+orçamento em largura: cada uma das $B$ chamadas é uma conversa nova com o mesmo
+\emph{prompt} inicial, sem histórico nem crítica, e vence o candidato que
+reproduz mais pares de demonstração. \texttt{critic} aloca em profundidade: o
+Gerador propõe regra e programa, o Crítico aponta contradições em prosa livre, e
+o Gerador revisa com o histórico completo. Cada ciclo custa duas chamadas, de
+modo que com $B = \orcamento$ resultam \AcritProg{} programas contra os
+\AsampProg{} da amostragem.
 
-As quatro condições rodam sobre as mesmas \An{} tarefas sorteadas de \divisao{}
-com semente \semente{} e $B = \orcamento$ (ímpar, para que a última chamada seja
-sempre do Gerador), com \modelo{} nos dois papéis — usar o mesmo modelo isola a
-assimetria de informação da capacidade de um segundo modelo. A escolha do modelo
-é uma escolha de poder estatístico: modelos fortes resolvem quase tudo já na
-primeira geração e modelos fracos falham em tudo, e ambos os extremos produzem
-apenas pares concordantes; \modelo{} maximiza a taxa de discordância entre os
-modelos acessíveis.
+A adoção de \emph{best-of-N} como linha de base é deliberada: nada obriga quem
+dispõe de $B$ chamadas a gastá-las revisando um único programa em série, e medir
+a intervenção contra uma alternativa que aloca pior produziria uma vantagem que
+informa mais sobre o comparativo do que sobre o método.
 
-O desenho é pareado, então o que importa não é a diferença de acurácia agregada,
-mas quantas tarefas cada condição resolveu que a outra não. Usamos o teste de
-McNemar exato \citep{mcnemar:47} sobre os pares discordantes, preferido à
-aproximação qui-quadrado por ser confiável com poucas discordâncias, e o
-intervalo de confiança de Wilson \citep{wilson:27} sobre a proporção de
-discordâncias, convertido para pontos percentuais de acurácia. Reportar o
-intervalo é o que distingue a ausência de efeito detectado da ausência de
-capacidade de medição. A família de \numComparacoes{} comparações foi
-pré-registrada antes da execução, o que exige a correção de Bonferroni
-\citep{dunn:61}: $\alpha = 0{,}05/\numComparacoes = \alfaBonf$ por teste. Tarefas
-interrompidas por erro de API são excluídas da comparação pareada.
+Essa comparação responde a uma questão pragmática, não causal: as condições
+diferem em quatro eixos simultâneos — existência de feedback, acesso ao gabarito,
+orçamento em série ou paralelo, e temperatura (0,8 em \texttt{sampling}, 0,2 nas
+demais; sem essa assimetria as $N$ amostras colapsariam em programas quase
+idênticos). Para separar os dois eixos de maior interesse, duas condições
+adicionais variam um único eixo em relação a \texttt{critic}
+(Figura~\ref{fig:matriz}): \texttt{critic\_no\_oracle} recebe o código, a regra e
+o relatório de execução, mas nunca $y^\star_t$; \texttt{critic\_cegis} recebe o
+mesmo que \texttt{critic}, inclusive $y^\star_t$, mas responde com um único
+contraexemplo e uma classe de correção em vocabulário fechado
+(\texttt{MISSING\_CASE}, \texttt{WRONG\_TRANSFORM}, \texttt{WRONG\_GEOMETRY},
+\texttt{WRONG\_COLOR\_MAP}, \texttt{WRONG\_SCOPE}, \texttt{OTHER}) em vez de prosa
+livre.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=3mm]
+  \node[celcheia] (c11) {\texttt{critic}\\[2pt] prosa livre,\\ com oráculo};
+  \node[celcheia, right=3mm of c11] (c12) {\texttt{critic\_cegis}\\[2pt] contraexemplo,\\ com oráculo};
+  \node[celcheia, below=4mm of c11] (c21) {\texttt{critic\_}\\\texttt{no\_oracle}\\[2pt] prosa livre,\\ sem oráculo};
+  \node[celvazia, below=4mm of c12] (c22) {não instanciada\\[2pt] (variaria os\\ dois eixos)};
+
+  \node[eixo, above=1.5mm of c11] {prosa livre};
+  \node[eixo, above=1.5mm of c12] {estruturada};
+  \node[eixo, left=1.5mm of c11] {com\\ oráculo};
+  \node[eixo, left=1.5mm of c21] {sem\\ oráculo};
+
+  \draw[{Latex[length=1.3mm]}-{Latex[length=1.3mm]}, black!55] (c11) -- (c12);
+  \draw[{Latex[length=1.3mm]}-{Latex[length=1.3mm]}, black!55] (c11) -- (c21);
+
+  \node[cel, text width=53mm, anchor=north]
+       at ([yshift=-4mm]$(c21.south)!0.5!(c22.south)$)
+       {\texttt{sampling} — linha de base: sem feedback,\\
+        orçamento inteiro em candidatos independentes};
+\end{tikzpicture}
+\caption{As quatro condições nos dois eixos da decomposição. As setas marcam as
+comparações que variam um único eixo: na horizontal, a forma do feedback com o
+acesso à informação constante; na vertical, o acesso com a forma constante. A
+célula inferior direita não é instanciada porque variaria os dois eixos.}
+\label{fig:matriz}
+\end{figure}
+
+\subsection{Salvaguardas e Análise}
+
+Conceder o gabarito a um agente cria três riscos, tratados separadamente. O
+gabarito \textbf{não seleciona}: o critério de parada é idêntico nas quatro
+condições — o candidato é aceito quando reproduz todos os pares de demonstração —
+e o par de teste roda uma única vez, ao final, apenas para medir; se o laço
+parasse ao acertar o teste, a taxa de acerto viraria um limite superior de
+oráculo. O gabarito \textbf{não vaza}: um filtro automático redige, na saída do
+Crítico, linhas compostas apenas de inteiros e qualquer código, e cada redação é
+contabilizada, de modo que o vazamento vira evento mensurável em vez de depender
+da cooperação do modelo. O Crítico \textbf{não resolve}: é reinstanciado a cada
+rodada, sem histórico, e portanto não pode construir uma solução ao longo do
+diálogo. Gerador e Crítico usam o mesmo modelo, para que uma eventual vantagem
+não seja atribuível à capacidade de um segundo modelo.
+
+Todas as condições rodam sobre as mesmas \An{} tarefas sorteadas de \divisao{}
+com semente \semente{} e $B = \orcamento$, declaradas antes da execução. Em
+desenho pareado, o que importa não é a diferença de acurácia agregada, mas
+quantas tarefas cada condição resolveu que a outra não \citep{mcnemar:47}: o
+teste de McNemar exato descarta as concordâncias e avalia se as discordâncias se
+dividem por acaso, $p = 2P(X \le \min(a,b))$ com
+$X \sim \mathrm{Binomial}(a+b, 1/2)$. Usamos a versão exata em vez da aproximação
+qui-quadrado, pouco confiável com poucas discordâncias. Os intervalos são de
+Wilson \citep{wilson:27} sobre a proporção de discordâncias a favor da
+intervenção, convertidos para pontos percentuais de acurácia:
+
+\begin{equation}
+\mathrm{IC}_{95} =
+\frac{\hat{p} + \frac{z^2}{2n} \pm z\sqrt{\frac{\hat{p}(1-\hat{p})}{n} + \frac{z^2}{4n^2}}}
+     {1 + \frac{z^2}{n}} .
+\label{eq:wilson}
+\end{equation}
+
+\noindent Reportá-los é o que distingue a ausência de efeito detectado da
+ausência de capacidade de medição. A família de \numComparacoes{} comparações
+(cada condição de crítico contra \texttt{sampling}, e \texttt{critic} contra as
+outras duas) foi pré-registrada antes da execução, o que exige a correção de
+Bonferroni \citep{dunn:61}: $\alpha = 0{,}05/\numComparacoes = \alfaBonf$ por
+teste. O par \texttt{no\_oracle} \emph{vs.} \texttt{cegis} fica de fora por
+variar os dois eixos. Tarefas interrompidas por erro de API são excluídas da
+comparação pareada.
+
+O modelo é \modelo{} nos dois papéis. A escolha é de poder estatístico: um
+desenho pareado só discrimina se existirem tarefas que uma condição resolve e a
+outra não, e modelos em qualquer extremo — que resolvem tudo na primeira geração
+ou falham em ambas — produzem apenas pares concordantes.
 
 \section{Resultados}
 
-A medição (\Adata{}) emitiu \Acriticas{} críticas e registrou \Aleaks{} eventos
-de vazamento. As Tabelas~\ref{tab:agregados} e~\ref{tab:comparacoes} trazem os
-agregados e as comparações pareadas.
+\subsection{Comparação em Escala}
 
 \begin{table}[t]
 \centering
@@ -354,58 +462,77 @@ Condição & Res. & Acur. & Treino & Prog. & Tok. \\
 \bottomrule
 \end{tabular}
 \caption{Resultados agregados, ordenados por acurácia. ``Treino'' é a fração de
-tarefas em que o candidato final reproduz todos os pares de demonstração — o
-alvo que as estratégias de fato otimizam.}
-\label{tab:agregados}
+tarefas em que o candidato final reproduz todos os pares de demonstração — o alvo
+que as estratégias de fato otimizam; ``Prog.'' é o número médio de programas por
+tarefa e ``Tok.'', o consumo médio de tokens.}
+\label{tab:exp2}
 \end{table}
 
-\begin{table}[t]
+\begin{figure}[t]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Par & Discord. & $p$ & IC 95\% \\
-\midrule
-\texttt{samp}--\texttt{critic}   & \CumDisc{} (\CumSplit)     & \Cump{}  & \CumLo{} a \CumHi \\
-\texttt{samp}--\texttt{no\_or}   & \CdoisDisc{} (\CdoisSplit) & \Cdoisp{} & \CdoisLo{} a \CdoisHi \\
-\texttt{samp}--\texttt{cegis}    & \CtresDisc{} (\CtresSplit) & \Ctresp{} & \CtresLo{} a \CtresHi \\
-\texttt{critic}--\texttt{no\_or} & \CquatroDisc{} (\CquatroSplit) & \textbf{\Cquatrop{}} & \CquatroLo{} a \CquatroHi \\
-\texttt{critic}--\texttt{cegis}  & \CcincoDisc{} (\CcincoSplit) & \Ccincop{} & \CcincoLo{} a \CcincoHi \\
-\bottomrule
-\end{tabular}
-\caption{As \numComparacoes{} comparações pré-registradas, com $p$ de McNemar
-exato e intervalos em pontos percentuais. O menor $p$ observado é \pMenor{}, e
-todos os intervalos incluem o zero.}
-\label{tab:comparacoes}
-\end{table}
+\begin{tikzpicture}[x=0.145cm, y=1cm]
+  \def\ya{2.5} \def\yb{2.0} \def\yc{1.5} \def\yd{1.0} \def\ye{0.5}
+  \foreach \x in {-10,-5,0,5} {
+    \draw[gray!30] (\x,0.28) -- (\x,2.78);
+    \node[font=\scriptsize, gray, below] at (\x,0.28) {\x};
+  }
+  \draw[thick, gray!70] (0,0.28) -- (0,2.78);
+  \node[font=\scriptsize, gray, below] at (-3,-0.02) {diferença de acurácia (pp)};
+  % um \draw por comparação: lê \C*LoN e \C*HiN do painel
+  \draw[very thick] (\CumLoN,\ya) -- (\CumHiN,\ya);
+  \draw[thick] (\CumLoN,\ya-0.09) -- (\CumLoN,\ya+0.09);
+  \draw[thick] (\CumHiN,\ya-0.09) -- (\CumHiN,\ya+0.09);
+  \draw[very thick] (\CdoisLoN,\yb) -- (\CdoisHiN,\yb);
+  \draw[thick] (\CdoisLoN,\yb-0.09) -- (\CdoisLoN,\yb+0.09);
+  \draw[thick] (\CdoisHiN,\yb-0.09) -- (\CdoisHiN,\yb+0.09);
+  \draw[very thick] (\CtresLoN,\yc) -- (\CtresHiN,\yc);
+  \draw[thick] (\CtresLoN,\yc-0.09) -- (\CtresLoN,\yc+0.09);
+  \draw[thick] (\CtresHiN,\yc-0.09) -- (\CtresHiN,\yc+0.09);
+  \draw[very thick] (\CquatroLoN,\yd) -- (\CquatroHiN,\yd);
+  \draw[thick] (\CquatroLoN,\yd-0.09) -- (\CquatroLoN,\yd+0.09);
+  \draw[thick] (\CquatroHiN,\yd-0.09) -- (\CquatroHiN,\yd+0.09);
+  \draw[very thick] (\CcincoLoN,\ye) -- (\CcincoHiN,\ye);
+  \draw[thick] (\CcincoLoN,\ye-0.09) -- (\CcincoLoN,\ye+0.09);
+  \draw[thick] (\CcincoHiN,\ye-0.09) -- (\CcincoHiN,\ye+0.09);
+  % fill=white impede que as linhas de grade cruzem o texto
+  \node[rot, anchor=west] at (-11,\ya+0.22) {\texttt{samp}--\texttt{critic} ($p=\Cump$)};
+  \node[rot, anchor=west] at (-11,\yb+0.22) {\texttt{samp}--\texttt{no\_or} ($p=\Cdoisp$)};
+  \node[rot, anchor=west] at (-11,\yc+0.22) {\texttt{samp}--\texttt{cegis} ($p=\Ctresp$)};
+  \node[rot, anchor=west] at (-11,\yd+0.22) {\texttt{critic}--\texttt{no\_or} ($p=\Cquatrop$)};
+  \node[rot, anchor=west] at (-11,\ye+0.22) {\texttt{critic}--\texttt{cegis} ($p=\Ccincop$)};
+\end{tikzpicture}
+\caption{Intervalos de Wilson (Equação~\ref{eq:wilson}) de 95\% das
+\numComparacoes{} comparações pré-registradas, em pontos percentuais; a linha
+vertical marca a ausência de
+efeito e todos os intervalos a cruzam. As discordâncias, na ordem de cima para
+baixo, são \CumDisc{} (\CumSplit), \CdoisDisc{} (\CdoisSplit), \CtresDisc{}
+(\CtresSplit), \CquatroDisc{} (\CquatroSplit) e \CcincoDisc{} (\CcincoSplit).
+O que a figura evidencia não é uma ordenação, e sim a largura dos intervalos:
+mesmo em \An{} tarefas, a medição não separa as hipóteses.}
+\label{fig:forest}
+\end{figure}
 
 % >>> VEREDITO (resultado principal)
-Sob orçamento igualado, \vereditoUm{}. A comparação mais próxima é
-\texttt{critic} \emph{vs.}\
-\texttt{critic\_no\_oracle}, com $p$ = \Cquatrop{}; a diferença entre
-\texttt{critic} e \texttt{sampling} é de \AdeltaCritSamp~pp, com intervalo de
-\CumLo{} a \CumHi~pp.
+Com as quatro condições medidas nas mesmas \An{} tarefas
+(Tabela~\ref{tab:exp2}), a hipótese da Equação~\ref{eq:delta} não se confirma:
+\vereditoDois{} (Figura~\ref{fig:forest}). A comparação
+mais próxima é \texttt{critic} \emph{vs.}\ \texttt{critic\_no\_oracle}, com
+$p$ = \Cquatrop{} e intervalo de \CquatroLo{} a \CquatroHi~pp, que ainda inclui o
+zero; o menor $p$ da família é \pMenor{}. A diferença entre \texttt{critic} e
+\texttt{sampling} é de \AdeltaCritSamp~pp.
 
-O mecanismo, porém, opera como projetado: o Crítico produz \AcritProg{} programas
-por tarefa contra \AsampProg{} da amostragem — \AreducaoProg\% a menos —
-atingindo a \emph{mesma} consistência com os pares de demonstração
+O mecanismo, no entanto, opera como projetado: o Crítico produz \AcritProg{}
+programas por tarefa contra \AsampProg{} da amostragem — \AreducaoProg\% a menos
+— atingindo a \emph{mesma} consistência com os pares de demonstração
 (\AcritTreino\% nas duas condições). Converte orçamento em revisão com eficiência
 real; o que não ocorre é a conversão disso em acurácia no teste. A restrição de
-formato de \texttt{critic\_cegis} também foi obedecida sem exceção
-(\CegisConf{} das críticas com rótulo válido de classe de correção), sem que a
-adesão se traduzisse em vantagem. E \texttt{critic\_no\_oracle}, a única condição
-que descreve um sistema executável sem gabarito, é a de menor acurácia bruta
-(\AnoorAcc\%): nesta escala, crítica estruturada sem informação privilegiada não
-compra nada mensurável.
+formato de \texttt{critic\_cegis} foi obedecida sem exceção (\CegisConf{} das
+críticas com rótulo válido) e o filtro anti-vazamento registrou \Aleaks{} eventos
+nas \Acriticas{} críticas emitidas — mas nem o formato nem o oráculo se
+converteram em vantagem. Entre as quatro, \texttt{critic\_no\_oracle} é a de
+menor acurácia bruta e a única que descreve um sistema executável sem gabarito.
 
 \subsection{A Origem das Vitórias}
-
-A primeira chamada é idêntica nas quatro condições — mesmo \emph{prompt},
-histórico vazio, nenhum crítico envolvido —, diferindo apenas na temperatura.
-Vitórias decididas ali não distinguem estratégia alguma. A
-Figura~\ref{fig:decomposicao} separa, em cada condição, as vitórias obtidas na
-primeira geração das obtidas pelo ciclo.
 
 \begin{figure}[t]
 \centering
@@ -416,7 +543,7 @@ primeira geração das obtidas pelo ciclo.
     \draw[gray!30] (\x,0.25) -- (\x,2.75);
     \node[font=\scriptsize, gray, below] at (\x,0.25) {\x};
   }
-  % segmento claro = 1a geração; escuro = ciclo. Lê \G* do painel.
+  % segmento claro = 1a geração; escuro = ciclo
   \fill[black!18] (0,\yA-0.16) rectangle (\GsampUm,\yA+0.16);
   \fill[black!55] (\GsampUm,\yA-0.16) rectangle (\GsampTot,\yA+0.16);
   \fill[black!18] (0,\yB-0.16) rectangle (\GcritUm,\yB+0.16);
@@ -444,88 +571,149 @@ ciclo. A ordenação pelo total (\GcritTot{}, \GsampTot{}, \GcegisTot{},
 \label{fig:decomposicao}
 \end{figure}
 
-O resultado é que \vereditoDois{}. Restringindo cada par às tarefas que a
-primeira geração não resolveu em nenhuma das duas condições, restam \Rn{} tarefas
-— cerca de um quinto da amostra discrimina de fato — e todos os
-\numComparacoes{} $p$-valores ficam entre \RpMenor{} e \RpMaior{}. O mesmo padrão
-aparece numa medição anterior sobre as mesmas tarefas, com duas condições e um
-protocolo de crítico diferente: descontada a primeira geração, o placar fica
-empatado em \Bciclo{}\,$\times$\,\Bciclo{} sobre \BdiscrimN{} tarefas.
+A primeira chamada é idêntica nas quatro condições — mesmo \emph{prompt},
+histórico vazio, nenhum crítico envolvido —, diferindo apenas na temperatura.
+Vitórias decididas ali não distinguem estratégia alguma.
 
-Duas leituras decorrem daí. A primeira é metodológica: o poder estatístico
-efetivo de uma comparação entre arquiteturas de agentes é muito menor do que $n$
-sugere. A segunda vai na direção oposta ao número bruto: descontada a primeira
-geração, as três condições de crítico ficam \emph{acima} de \texttt{sampling} em
-vitórias do ciclo (\GcegisCiclo{}, \GcritCiclo{} e \GnoorCiclo{} contra
-\GsampCiclo{}). As diferenças são pequenas e nenhuma é significativa, mas a
-direção depende de qual quantidade se observa — dependência invisível em qualquer
-relato que reporte apenas acurácia agregada. O confundimento é eliminável por
-construção: basta que a primeira condição a alcançar uma tarefa grave a primeira
-geração e as demais a repitam, com a repetição ainda debitada do orçamento, o que
-de quebra economiza \SeedEconomia{} chamadas em um bloco de quatro condições.
+% >>> VEREDITO (origem das vitórias)
+A Figura~\ref{fig:decomposicao} mostra que \vereditoTres{}. Restringindo cada par
+às tarefas que a primeira geração não resolveu em nenhuma das duas condições, a
+medição discrimina em cerca de um quinto da amostra e todos os
+\numComparacoes{} $p$-valores ficam entre \RpMenor{} e \RpMaior{}.
 
-\section{Discussão}
+Duas leituras decorrem daí. A primeira é metodológica: o poder efetivo de uma
+comparação entre arquiteturas de agentes é muito menor do que $n$ sugere, porque
+boa parte da amostra é decidida antes de qualquer estratégia agir. A segunda vai
+na direção oposta ao número bruto: descontada a primeira geração, as três
+condições de crítico ficam \emph{acima} de \texttt{sampling} em vitórias do ciclo
+(\GcegisCiclo{}, \GcritCiclo{} e \GnoorCiclo{} contra \GsampCiclo{}). As
+diferenças são pequenas e nenhuma é significativa, mas a direção depende de qual
+quantidade se observa — dependência invisível em qualquer relato que reporte
+apenas acurácia agregada.
 
-A leitura defensável é pragmática: sob orçamento de chamadas igualado, alocar o
-orçamento em diversidade não é distinguível de alocá-lo em revisão dirigida — nem
-mesmo quando a revisão é guiada por um oráculo indisponível a qualquer sistema
-autônomo. Como o desenho favorece a via iterativa por construção, o resultado é
-mais informativo do que um empate entre esquemas equivalentes: indica que a
-informação privilegiada, isoladamente, não é o fator limitante. Não sustenta,
-porém, a leitura causal de que a assimetria de informação seja irrelevante — as
-condições diferem em vários eixos, e os intervalos de confiança admitem efeitos
-que a medição não teria poder para detectar.
+O efeito replica numa medição independente sobre as mesmas tarefas, com apenas
+\texttt{sampling} e \texttt{critic} e um protocolo de crítica anterior: das
+\BsampRes{} vitórias de \texttt{sampling}, \BsampPrimeira{} vêm da primeira
+geração, e das \BcritRes{} de \texttt{critic}, \BcritPrimeira{}, deixando o placar
+do ciclo em \BsampCiclo{}\,$\times$\,\BcritCiclo{}, exatamente empatado; nas
+\BdiscrimN{} tarefas restantes a comparação também não distingue as condições
+(\Bdelta~pp, $p$ = \Bp{}, intervalo de \BicBaixo{} a \BicAlto~pp). Sob orçamento
+igualado, portanto, \vereditoUm{}, com qualquer vantagem limitada a
+\BicAltoAbs~pp.
 
-O achado mais consequente é o outro, e ele não é específico deste arranjo:
-qualquer comparação entre esquemas de inferência que partam do mesmo
-\emph{prompt} inicial herda o confundimento da primeira geração, e nenhuma
-métrica agregada o revela. Uma verificação por subamostragem sem reposição das
-próprias \An{} tarefas (\SubRep{} repetições) mostra a consequência prática: com
-\SubNa{} tarefas, a direção observada em \An{} se reproduz em apenas \SubDirA\%
-das subamostras — indistinguível de um sorteio — e a ordenação completa das
-quatro condições, em \SubOrdA\%; com \SubNb{} tarefas, em \SubOrdB\%. Estudos
-desta classe conduzidos em algumas dezenas de tarefas não estão medindo direção
-\citep{button:13}.
+O confundimento é eliminável por construção: basta que a primeira condição a
+alcançar uma tarefa grave a primeira geração e as demais a repitam, com a
+repetição ainda debitada do orçamento. Além de removê-lo, isso economiza
+$(\text{condições} - 1) \times \text{tarefas}$ chamadas por bloco,
+\SeedEconomia{} num bloco de quatro condições. Nenhuma das medições aqui
+reportadas o utiliza.
 
-\paragraph{Limitações.} A dominante é o confundimento da primeira geração, que
-reduz o $n$ efetivo e cuja correção, embora conhecida e barata, não foi aplicada
-aqui. Seguem-se: o orçamento é medido em chamadas, não em tokens — as condições
-de crítico consomem de \AtokExcessoMin\% a \AtokExcessoMax\% mais tokens por
-tarefa, e sob orçamento em tokens o sinal poderia inverter; os oráculos não são
-autônomos, de modo que \texttt{critic} e \texttt{critic\_cegis} medem a validação
-por oposição como limite superior, não um método implantável; há uma execução por
-tarefa, então parte da variação é ruído do modelo, mitigado pelo pareamento mas
-não eliminado; \texttt{sampling} foi coletado em data anterior à das condições de
-crítico, e o modelo é hospedado, o que introduz um confundimento temporal nas
-comparações que envolvem a linha de base; e o filtro anti-vazamento captura grades
-e código, mas não paráfrases, de modo que ele mede o que foi barrado, não o que
-passou.
+\subsection{Reprodutibilidade da Ordenação}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=0.0135cm, y=0.032cm]
+  \draw[gray!50] (0,0) -- (0,100);
+  \foreach \y in {0,25,50,75,100} {
+    \draw[gray!25] (0,\y) -- (285,\y);
+    \node[font=\scriptsize, gray, anchor=east] at (-6,\y) {\y\%};
+  }
+  \foreach \x in {30,60,90,135,180,270} {
+    \node[font=\scriptsize, gray, anchor=north] at (\x,-3) {\x};
+  }
+  \node[font=\scriptsize, gray, anchor=north] at (150,-22) {tarefas na subamostra};
+  \draw[very thick] (30,\SubDirAN) -- (60,\SubDirBN) -- (90,\SubDirCN)
+                 -- (135,\SubDirDN) -- (180,\SubDirEN) -- (270,100);
+  \draw[thick, dashed, gray!70] (30,\SubOrdAN) -- (60,\SubOrdBN) -- (90,\SubOrdCN)
+                 -- (135,\SubOrdDN) -- (180,\SubOrdEN) -- (270,100);
+  \draw[gray!60] (0,50) -- (285,50);
+  \node[rot, anchor=west] at (95,88) {direção \texttt{critic} $>$ \texttt{samp}};
+  \node[rot, anchor=west] at (95,22) {ordenação das quatro};
+  \node[rot, anchor=east] at (128,50) {acaso};
+\end{tikzpicture}
+\caption{Reprodutibilidade da ordenação sob subamostragem das próprias \An{}
+tarefas (\SubRep{} repetições por tamanho, sem reposição, preservando o
+pareamento). A linha cheia é a fração de subamostras em que \texttt{critic}
+supera \texttt{sampling}; a tracejada, a fração em que a ordenação completa das
+quatro coincide com a observada em \An{}. Ambas convergem a 100\% em \An{} por
+construção.}
+\label{fig:estabilidade}
+\end{figure}
+
+As comparações acima não são significativas, mas a ordenação que produzem é
+frequentemente o que sobra de um estudo desses. Para medir quanto dela é
+reprodutível, subamostramos o conjunto fechado de \An{} tarefas sem reposição,
+preservando o pareamento, em \SubRep{} repetições por tamanho
+(Figura~\ref{fig:estabilidade}).
+
+Com \SubNa{} tarefas, a direção observada em \An{} se reproduz em \SubDirA\% das
+subamostras — indistinguível de um sorteio — e a banda de 5 a 95\% da diferença
+de acurácia vai de \SubBandaAlo{} a \SubBandaAhi~pp. Com \SubNb{} tarefas, ainda
+\SubDirB\%. A ordenação completa das quatro condições é substancialmente mais
+frágil: \SubOrdA\% em \SubNa{} tarefas e \SubOrdB\% em \SubNb{}. Estudos desta
+classe conduzidos em algumas dezenas de tarefas não estão medindo direção, e a
+ordenação entre mais de duas condições é essencialmente incidental. Note-se que
+a subamostragem mede apenas variância de \emph{amostra}: uma reexecução real
+acrescenta a variância do modelo, de modo que esses valores são um piso otimista.
+
+O mesmo conjunto quantifica o risco de extrapolar antes do fechamento. Sobre as
+primeiras \ProjN{} tarefas, extrapolar linearmente as proporções da comparação
+mais próxima produzia $p$ = \ProjPextrapolado{}, valor que teria atravessado a
+correção de Bonferroni; o conjunto fechado deu $p$ = \ProjPfinal{}. É esse o
+mecanismo que produz literaturas contraditórias sem exigir má conduta: um estudo
+que parasse antes do fechamento reportaria uma direção diferente, com $p$ não
+significativo, reportável como observação direcional, e ruído \citep{button:13}.
+
+\section{Discussão e Limitações}
+
+A leitura defensável é pragmática: sob orçamento igualado, alocar em diversidade
+não é distinguível de alocar em revisão dirigida — nem mesmo quando a revisão é
+guiada por um oráculo indisponível a qualquer sistema autônomo. Como o desenho
+favorece a via iterativa por construção, isso indica que a informação
+privilegiada, isoladamente, não é o fator limitante; não sustenta, porém, que a
+assimetria de informação seja irrelevante, já que os intervalos admitem efeitos
+que a medição não detectaria.
+
+O achado mais consequente é sobre \emph{quanto de uma comparação entre
+arquiteturas de agentes é atribuível à arquitetura}. O confundimento da primeira
+geração não é específico deste arranjo: qualquer comparação entre esquemas que
+partam do mesmo \emph{prompt} o herda, e ele não aparece em métrica agregada
+alguma.
+
+Uma implicação prática: contabilizamos orçamento em chamadas, mas contado em
+tokens o quadro se deteriora para as condições de crítico, que consomem de
+\AtokExcessoMin\% a \AtokExcessoMax\% mais tokens por tarefa, porque o histórico
+acumulado e o gabarito trafegam a cada crítica. Sob orçamento em tokens — a
+unidade de custo efetiva — o sinal poderia inverter.
+
+\paragraph{Limitações.} (i) Metade do resultado vem de uma chamada comum às
+condições, com correção conhecida e não aplicada. (ii) \texttt{critic} e
+\texttt{critic\_cegis} consultam o gabarito durante o laço e medem a validação por
+oposição como limite superior, não um método implantável; apenas
+\texttt{critic\_no\_oracle} descreve um sistema executável. (iii) A linha de base
+foi coletada em data anterior às condições de crítico, e o modelo é hospedado:
+as comparações com \texttt{sampling} carregam um confundimento temporal que as
+comparações entre críticos não têm. (iv) Uma execução por tarefa — o pareamento
+mitiga o ruído do modelo, não o elimina. (v) A acurácia absoluta e a própria
+existência de pares discordantes dependem do modelo, de modo que as conclusões se
+referem ao regime de capacidade de \modelo{}.
 
 \section{Conclusão}
 
 % >>> VEREDITO (conclusão)
 Sob orçamento fixo de chamadas para síntese de programas no ARC-AGI-1, quatro
 condições que variam isoladamente o acesso ao oráculo e a forma do feedback não
-se separam em \An{} tarefas: \vereditoUm{}. O crítico opera como mecanismo,
-atingindo a mesma consistência com os pares de demonstração com
-\AreducaoProg\% menos programas, sem que isso se converta em acerto no teste.
+se separam em \An{} tarefas: \vereditoDois{}. O crítico atinge a mesma
+consistência com os pares de demonstração usando \AreducaoProg\% menos programas,
+sem que isso se converta em acerto no teste.
 
-O resultado mais transferível independe de qual condição venha a prevalecer:
-\vereditoDois{}. Descontada essa parcela, a medição discrimina em cerca de um
-quinto da amostra e a ordenação entre as condições inverte. O passo seguinte não
-é aumentar $n$, e sim eliminar esse confundimento por construção e medir o
-orçamento em tokens, que é a unidade de custo efetiva.
-
-\section*{Reprodutibilidade}
-
-Cada rodada grava um manifesto com a lista literal de identificadores de tarefa,
-a semente, o orçamento e os modelos, além de um registro por condição com todos
-os \emph{prompts}, respostas brutas, códigos gerados e resultados de execução. As
-respostas brutas do Crítico são preservadas antes do filtro anti-vazamento, o que
-permite auditar independentemente o que foi redigido e o que passou. Os testes
-automatizados travam as propriedades críticas do desenho, incluindo a separação
-de informação entre os \emph{prompts} do Gerador e do Crítico e a paridade de
-orçamento entre as condições.
+O resultado mais transferível independe de qual condição prevaleça:
+\vereditoTres{}. Descontada essa parcela, a medição discrimina em cerca de um
+quinto da amostra e a ordenação inverte em relação ao número bruto — ordenação
+que, ademais, é pouco reprodutível: em \SubNb{} tarefas ela se repete em apenas
+\SubOrdB\% das subamostras do mesmo conjunto. O passo seguinte não é aumentar
+$n$, e sim eliminar o confundimento da primeira geração e medir o orçamento em
+tokens.
 
 \bibliography{artigo}
 

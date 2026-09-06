@@ -3,8 +3,9 @@
 Artigo em português no template AAAI 2027 (`aaai2027.sty`, `aaai2027.bst`).
 Fontes: `docs/*.md` e `README.md` do repositório.
 
-**Estado atual:** 5 páginas, 1 figura, 3 tabelas, 18 referências. Compila limpo —
-0 erros, 0 `Overfull \hbox`, 0 avisos do LaTeX.
+**Estado atual:** 5 páginas, 0 erros, 0 `Overfull \hbox`, 0 avisos do LaTeX.
+**Limite de extensão: 6 páginas.** Compile antes de acrescentar qualquer
+parágrafo, figura ou tabela.
 
 ## Compilar
 
@@ -23,9 +24,9 @@ curl -sLO https://github.com/rstudio/tinytex-releases/releases/download/v2026.09
 unzip -q TinyTeX-v2026.09.zip     # cria ./TinyTeX
 ```
 
-Para o Overleaf, subir apenas quatro arquivos: `artigo.tex`, `artigo.bib`,
-`aaai2027.sty` e `aaai2027.bst`. Compilador pdfLaTeX, documento principal
-`artigo.tex`. Não há figuras externas — a única figura é TikZ inline.
+No Overleaf, subir **apenas** `artigo.tex`, `artigo.bib`, `aaai2027.sty` e
+`aaai2027.bst`; compiler pdfLaTeX. Não há figura externa — as cinco são TikZ
+dentro do `.tex`.
 
 ## Validar sem compilar
 
@@ -35,9 +36,8 @@ python check_artigo.py
 
 Verifica macros do painel definidas e usadas, `\ref` com `\label`, `\cite` com
 entrada no `.bib` (e o inverso, que o AuthorKit exige), pacotes e comandos
-proibidos, ambientes balanceados, as 3 marcas de veredito, macros no fim de linha
-que engolem o espaço seguinte, e vereditos em minúscula abrindo frase ou
-parágrafo. Rode depois de qualquer edição.
+proibidos, ambientes balanceados, as 4 marcas de veredito, macros no fim de linha
+que engolem o espaço seguinte e vereditos em minúscula iniciando frase.
 
 ## Estrutura
 
@@ -45,66 +45,69 @@ parágrafo. Rode depois de qualquer edição.
 Resumo
 1  Introdução
 2  Trabalho Relacionado
-3  Metodologia
-   3.1 Formulação e Condições        (Tabela 1)
-   3.2 Salvaguardas Contra Contaminação pelo Oráculo
-   3.3 Procedimento e Análise
-4  Resultados                        (Tabelas 2 e 3)
-   4.1 A Origem das Vitórias         (Figura 1)
-5  Discussão
+3  Metodologia        3.1 Formulação · 3.2 Condições · 3.3 Salvaguardas e Análise
+4  Resultados         4.1 Comparação em Escala
+                      4.2 A Origem das Vitórias
+                      4.3 Reprodutibilidade da Ordenação
+5  Discussão e Limitações
 6  Conclusão
-Reprodutibilidade · Referências
 ```
 
-O artigo sustenta duas afirmações, nesta ordem de importância:
+**Floats (6):** Fig. 1 arquitetura · Fig. 2 matriz de condições · Tab. 1
+resultados agregados · Fig. 3 intervalos de confiança · Fig. 4 decomposição das
+vitórias · Fig. 5 reprodutibilidade da ordenação.
 
-1. Nenhuma das 5 comparações pré-registradas é significativa — nem sob
-   Bonferroni, nem a α = 0,05 sem correção.
-2. Cerca de metade das vitórias de qualquer condição é decidida na primeira
-   geração, idêntica entre elas; descontada essa parcela, a medição discrimina em
-   ~1/5 da amostra e a ordenação entre condições inverte.
+O achado central é o **desconto da primeira geração** (4.2): metade das vitórias
+de qualquer condição vem de uma chamada idêntica entre elas, o experimento
+discrimina em ~1/5 da amostra, e a ordenação inverte ao descontar essa parcela.
 
 ## Atualizar quando os resultados mudarem
 
-Nenhum número está digitado solto no corpo. Tudo vem do bloco
-**`PAINEL DE RESULTADOS`** no topo de `artigo.tex`, e a figura lê as mesmas
-macros — mudar o painel atualiza texto, tabelas e gráfico juntos.
+Nenhum número está digitado solto no corpo. Tudo vem do **`PAINEL DE
+RESULTADOS`** no topo de `artigo.tex`, lido também pelas figuras TikZ — mudar o
+painel atualiza texto e gráficos juntos.
 
-1. **Números.** Troque os valores no painel. Macros terminadas em `N` são a
-   versão numérica com ponto decimal, consumida pela figura; a irmã sem `N` é a
-   de exibição. Vêm em pares na mesma linha — troque as duas. Valores com sinal
-   usam a forma `\mbox{$-$14{,}8}`, que compila em modo texto e matemático;
-   mantenha o formato.
-2. **Vereditos.** `\vereditoUm` e `\vereditoDois`, logo abaixo do painel,
-   carregam as duas afirmações reusadas no resumo, nos resultados e na conclusão.
-   Ambas começam em minúscula, para uso no meio de frase — o validador avisa se
-   alguma passar a abrir frase ou parágrafo.
-3. **Parágrafos de leitura.** Apenas os três marcados com `% >>> VEREDITO`
-   (resumo, resultado principal, conclusão) afirmam o sinal do resultado. O
-   título é neutro e não precisa mudar.
-4. **Números calculados fora do repositório.** Dois blocos precisam ser refeitos
-   se os dados mudarem:
-   - Os **intervalos de confiança** (Tabela 3): `metrics.py` não implementa
-     Wilson. Calculados pela fórmula padrão e validados contra a medição de duas
-     condições sobre as mesmas tarefas, cujo IC publicado em `docs/results.md` é
-     reproduzido exatamente.
-   - A **estabilidade sob subamostragem** (dois números na Discussão): rode
-     `python reamostragem.py`, que lê `results/runs/critic-official/`.
+1. **Números.** Macros terminadas em `N` são a versão numérica (ponto decimal)
+   usada pelas figuras; a irmã, sem `N`, é a de exibição (vírgula). Vêm em pares
+   na mesma linha — troque as duas. Valores com sinal usam
+   `\mbox{$-$14{,}8}`, que compila em texto e em modo matemático; mantenha.
+2. **Vereditos.** `\vereditoUm`, `\vereditoDois` e `\vereditoTres` carregam as
+   três afirmações interpretativas do artigo.
+3. **Parágrafos de leitura.** Apenas os quatro marcados com `% >>> VEREDITO`
+   (resumo, 4.1, 4.2, conclusão) afirmam o sinal do resultado. O título é neutro
+   e não muda.
+4. **Números que não vêm do repositório.** Dois blocos foram calculados fora do
+   código do projeto:
+   - **Intervalos de confiança** (Fig. 3): `metrics.py` não implementa Wilson.
+     Calculados pela Equação 2 e validados contra a medição sob o protocolo
+     anterior, cujo IC publicado em `docs/results.md` é reproduzido exatamente.
+   - **Reprodutibilidade da ordenação** (Fig. 5): `python reamostragem.py`,
+     versionado aqui. Subamostragem sem reposição das próprias 270 tarefas,
+     20.000 repetições por tamanho, preservando o pareamento.
+
+## O que ficou de fora, deliberadamente
+
+O artigo apresenta o recorte necessário para sustentar a contribuição, não tudo
+que o projeto produziu. Não entraram: as notas de execução (chamadas, chaves,
+cota de API), a tabela de seleção de modelo, a família de comparações em forma de
+tabela, as comparações restritas em forma de tabela, a análise qualitativa de
+casos individuais, os estudos-piloto de 30 e 60 tarefas e os agregados completos
+da medição sob o protocolo anterior. Todos permanecem em `docs/results.md` e no
+histórico do repositório.
 
 ## Desvios do AuthorKit, declarados
 
-1. **Figura em TikZ inline.** O kit não proíbe `tikz` (proíbe `pgfplots`), mas
-   recomenda pré-gerar figuras e importá-las com `\includegraphics`. A escolha
-   por TikZ é o que permite que a figura leia o painel de resultados.
+1. **Figuras em TikZ inline.** O kit não proíbe `tikz` (proíbe `pgfplots`), mas
+   recomenda pré-gerar figuras e importá-las com `\includegraphics`. TikZ é o que
+   permite que as figuras leiam o painel de resultados.
 2. **`\renewenvironment{abstract}`.** O `aaai2027.sty` escreve "Abstract"
    literalmente e ignora `\abstractname`. O bloco no preâmbulo é cópia exata da
-   definição do estilo trocando só a palavra por "Resumo" — nenhuma métrica de
-   fonte, espaçamento ou margem muda. **Apague-o** para submeter à AAAI.
+   definição do estilo trocando só a palavra — nenhuma métrica muda.
+   **Apague-o** para submeter à AAAI.
 3. **`babel` é proibido**, então não há hifenização portuguesa e os nomes dos
    flutuantes são redefinidos à mão.
-4. **`\setlength{\tabcolsep}{4pt}`** local a cada tabela. Não é comando de layout
-   de página nem está na lista de proibidos; é o que mantém as tabelas dentro da
-   coluna.
+4. **`\setlength{\tabcolsep}{4pt}`** local à Tabela 1. Não é comando de layout de
+   página nem está na lista de proibidos.
 
 ## Pendências
 
