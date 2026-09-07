@@ -181,63 +181,58 @@ Modelos de Linguagem}
 \maketitle
 
 \begin{abstract}
-Um orçamento fixo de chamadas a um modelo de linguagem admite duas alocações
-incompatíveis: \emph{diversificar}, gerando $N$ candidatos independentes, ou
-\emph{iterar}, revisando um único candidato com feedback. A literatura relata
-ganhos para a segunda via e também falhas de autocorreção, e separá-las é difícil
-porque, sem informação externa, o revisor não sabe que errou. Damos à via
-iterativa uma vantagem que ela não teria em produção — um Crítico que enxerga o
-gabarito do par de teste, mas nunca seleciona a resposta —, obtendo um limite
-superior otimista.
+Um orçamento fixo de chamadas a um modelo de linguagem pode ser gasto de dois
+modos: gerando $N$ candidatos independentes ou revisando um único candidato com
+feedback. A literatura relata tanto ganhos quanto falhas para a segunda via, e
+separá-las é difícil porque, sem informação externa, o revisor não sabe que
+errou. Damos a essa via uma vantagem que ela não teria em produção — um Crítico
+que enxerga o gabarito do par de teste, mas nunca seleciona a resposta.
 % >>> VEREDITO (resumo)
-Em \An{} tarefas do ARC-AGI-1 sob orçamento igualado, \vereditoDois{}. O achado
-mais transferível independe disso: \vereditoTres{}, e descontá-la inverte a
-ordenação entre as condições. Por subamostragem do mesmo conjunto, em \SubNa{}
-tarefas essa ordenação se reproduz em apenas \SubOrdA\% das vezes.
+Em \An{} tarefas do ARC-AGI-1 sob orçamento igualado, \vereditoDois{}. Um segundo
+achado independe desse resultado: \vereditoTres{}, e descontá-la inverte a
+ordenação entre as condições. Por subamostragem, em \SubNa{} tarefas essa
+ordenação se reproduz em \SubOrdA\% das vezes.
 \end{abstract}
 
 \section{Introdução}
 
-Uma fração substancial do desempenho recente em raciocínio vem de escalar a
-computação no momento da inferência, e não os parâmetros do modelo
-\citep{snell:24,brown:24}. Isso converte uma questão antes implícita em decisão
-de engenharia com custo direto: dado um orçamento fixo de chamadas, como
-alocá-lo?
+Ganhos recentes em raciocínio vêm de escalar a computação no momento da
+inferência, e não os parâmetros do modelo \citep{snell:24,brown:24}. Isso levanta
+uma questão de custo direto: dado um orçamento fixo de chamadas, como alocá-lo?
 
-Há duas respostas estruturalmente distintas. \textbf{Diversificar} é gerar $N$
-programas independentes e selecionar o melhor por um verificador barato — a
-receita de \emph{pass@k} em geração de código \citep{chen:21} e do AlphaCode
-\citep{li:22}. \textbf{Iterar} é gastar o mesmo orçamento revisando um único
-candidato à luz de feedback, como em \emph{self-debugging} \citep{chen:24},
-\textsc{Self-Refine} \citep{madaan:23} e \textsc{Reflexion} \citep{shinn:23}.
+Há duas respostas. \textbf{Diversificar} é gerar $N$ programas independentes e
+selecionar o melhor por um verificador barato — a receita de \emph{pass@k} em
+geração de código \citep{chen:21} e do AlphaCode \citep{li:22}. \textbf{Iterar} é
+gastar o mesmo orçamento revisando um único candidato à luz de feedback, como em
+\emph{self-debugging} \citep{chen:24}, \textsc{Self-Refine} \citep{madaan:23} e
+\textsc{Reflexion} \citep{shinn:23}.
 
 A evidência sobre a segunda via é contraditória: os trabalhos originais relatam
 ganhos expressivos, mas réplicas controladas encontram que grande parte deles
 desaparece quando o orçamento é igualado ou quando o modelo precisa detectar
-sozinho que errou \citep{huang:24,stechly:23,olausson:24}. A explicação candidata
-mais simples é que autocrítica não é crítica: sem informação externa sobre o
-próprio erro, o modelo reafirma a resposta que já produziu. O fator limitante
-seria, então, a qualidade do canal de feedback.
+sozinho que errou \citep{huang:24,stechly:23,olausson:24}. Uma explicação é que
+autocrítica não é crítica: sem informação externa sobre o próprio erro, o modelo
+reafirma a resposta que já produziu. O limitante seria o canal de feedback, não a
+estratégia iterativa.
 
-Testamos essa hipótese maximizando a variável que ela aponta: nosso Crítico
-enxerga o gabarito do par de teste, que o Gerador nunca vê. O desenho é
-deliberadamente favorável à via iterativa e funciona como \textbf{limite superior
-otimista} — se nem ele vencer, a vantagem atribuída ao feedback iterativo fica sob
-suspeita muito além deste arranjo. Avaliamos no ARC-AGI-1 \citep{chollet:19}, em
-que cada tarefa traz pares entrada\,$\rightarrow$\,saída de demonstração e exige
-inferir a transformação: a resposta é verificável exatamente e os pares de
-demonstração dão um verificador barato que ambas as estratégias usam sem tocar no
-gabarito.
+Nosso Crítico enxerga o gabarito do par de teste, que o Gerador nunca vê — uma
+vantagem indisponível a qualquer sistema autônomo. O desenho é, assim, um
+\textbf{limite superior otimista} da via iterativa: se nem ele vencer, a vantagem
+atribuída ao feedback iterativo fica sob suspeita. Avaliamos no ARC-AGI-1
+\citep{chollet:19}, em que cada tarefa traz pares
+entrada\,$\rightarrow$\,saída de demonstração e exige inferir a transformação; a
+resposta é verificável exatamente e os pares de demonstração dão um verificador
+barato que ambas as estratégias usam sem tocar no gabarito.
 
 \section{Trabalho Relacionado}
 
 A via iterativa realimenta o modelo com o resultado da execução \citep{chen:24}
-ou com crítica gerada por ele mesmo \citep{madaan:23,shinn:23}. A contestação foi
-rápida: \citet{huang:24} argumentam que modelos não corrigem raciocínio sem sinal
-externo, \citet{stechly:23} mostram que a melhora aparente provém do verificador
-embutido no protocolo, e \citet{olausson:24} constatam que o auto-reparo em código
+ou com crítica gerada por ele mesmo \citep{madaan:23,shinn:23}.
+\citet{huang:24} argumentam que modelos não corrigem raciocínio sem sinal
+externo; \citet{stechly:23} mostram que a melhora aparente provém do verificador
+embutido no protocolo; \citet{olausson:24} constatam que o auto-reparo em código
 só compensa quando o crítico é mais capaz que o gerador. Guiar síntese por
-contraexemplos é anterior aos modelos de linguagem \citep{solarlezama:06}; nossa
+contraexemplos antecede os modelos de linguagem \citep{solarlezama:06}; nossa
 condição \texttt{critic\_cegis} o transpõe para linguagem natural.
 
 \section{Metodologia}
@@ -290,12 +285,12 @@ final olham apenas para os pares de demonstração, e a avaliação final roda u
 \label{fig:pipeline}
 \end{figure}
 
-A Figura~\ref{fig:pipeline} mostra o laço comum. \texttt{sampling} aloca o
-orçamento em largura: cada uma das $B$ chamadas é uma conversa nova com o mesmo
-\emph{prompt}, sem histórico nem crítica, e vence o candidato que reproduz mais
-pares de demonstração. \texttt{critic} aloca em profundidade: o Gerador propõe
-regra e programa, o Crítico aponta contradições em prosa livre, e o Gerador revisa
-com o histórico completo. Cada ciclo custa duas chamadas, de modo que com
+No laço da Figura~\ref{fig:pipeline}, \texttt{sampling} aloca o orçamento em
+largura: cada uma das $B$ chamadas é uma conversa nova com o mesmo \emph{prompt},
+sem histórico nem crítica, e vence o candidato que reproduz mais pares de
+demonstração. \texttt{critic} aloca em profundidade: o Gerador propõe regra e
+programa, o Crítico aponta contradições em prosa livre, e o Gerador revisa com o
+histórico completo. Cada ciclo custa duas chamadas, de modo que com
 $B = \orcamento$ resultam \AcritProg{} programas contra os \AsampProg{} da
 amostragem. \emph{Best-of-N} é a linha de base porque nada obriga quem dispõe de
 $B$ chamadas a gastá-las revisando um único programa em série.
@@ -340,16 +335,16 @@ acesso à informação constante; na vertical, o acesso com a forma constante.}
 
 \subsection{Salvaguardas e Análise}
 
-Conceder o gabarito a um agente cria três riscos. Ele \textbf{não seleciona}: o
-critério de parada é idêntico nas quatro condições — o candidato é aceito quando
-reproduz todos os pares de demonstração — e o par de teste roda uma única vez, ao
-final; se o laço parasse ao acertar o teste, a acurácia viraria um limite superior
-de oráculo. Ele \textbf{não vaza}: um filtro redige, na saída do Crítico, linhas
-compostas apenas de inteiros e qualquer código, e cada redação é contabilizada,
-tornando o vazamento mensurável. E o Crítico \textbf{não resolve}: é reinstanciado
-a cada rodada, sem histórico, e não pode construir uma solução ao longo do
-diálogo. Gerador e Crítico usam o mesmo modelo, \modelo{}, para que uma eventual
-vantagem não seja atribuível a um segundo modelo mais capaz.
+O gabarito \textbf{não seleciona}: o critério de parada é idêntico nas quatro
+condições — o candidato é aceito quando reproduz todos os pares de demonstração —
+e o par de teste roda uma única vez, ao final; se o laço parasse ao acertar o
+teste, a acurácia viraria um limite superior de oráculo. O gabarito \textbf{não
+vaza}: um filtro redige, na saída do Crítico, linhas compostas apenas de inteiros
+e qualquer código, e cada redação é contabilizada, tornando o vazamento
+mensurável. O Crítico \textbf{não resolve}: é reinstanciado a cada rodada, sem
+histórico, e não pode construir uma solução ao longo do diálogo. Gerador e Crítico
+usam o mesmo modelo, \modelo{}, para que uma eventual vantagem não seja
+atribuível a um segundo modelo mais capaz.
 
 Todas as condições rodam sobre as mesmas \An{} tarefas sorteadas de \divisao{}
 com semente \semente{} e $B = \orcamento$, declaradas antes da execução. Em
@@ -440,13 +435,12 @@ $\alpha = 0{,}05$ isolado (Figura~\ref{fig:forest}). A comparação mais próxim
 intervalo de \CquatroLo{} a \CquatroHi~pp; a diferença entre \texttt{critic} e
 \texttt{sampling} é de \AdeltaCritSamp~pp.
 
-O mecanismo, no entanto, opera como projetado: o Crítico produz \AcritProg{}
-programas por tarefa contra \AsampProg{} da amostragem — \AreducaoProg\% a menos —
-atingindo a \emph{mesma} consistência com os pares de demonstração
-(\AcritTreino\% nas duas condições). Converte orçamento em revisão com eficiência
-real; o que não ocorre é a conversão disso em acurácia no teste. Entre as quatro,
-\texttt{critic\_no\_oracle} é a de menor acurácia bruta e a única que descreve um
-sistema executável sem gabarito.
+O mecanismo funciona no nível para que foi projetado: o Crítico produz
+\AcritProg{} programas por tarefa contra \AsampProg{} da amostragem —
+\AreducaoProg\% a menos — com a \emph{mesma} consistência nos pares de
+demonstração (\AcritTreino\% nas duas condições). Essa economia de tentativas não
+vira acurácia no teste. Entre as quatro, \texttt{critic\_no\_oracle} tem a menor
+acurácia bruta e é a única que descreve um sistema executável sem gabarito.
 
 \subsection{A Origem das Vitórias}
 
@@ -496,13 +490,11 @@ A Figura~\ref{fig:decomposicao} mostra que \vereditoTres{}. Restringindo cada pa
 medição discrimina em cerca de um quinto da amostra e todos os
 \numComparacoes{} $p$-valores ficam entre \RpMenor{} e \RpMaior{}.
 
-Duas leituras decorrem daí. A primeira é metodológica: o poder efetivo de uma
-comparação entre arquiteturas de agentes é muito menor do que $n$ sugere. A
-segunda vai na direção oposta ao número bruto: descontada a primeira geração, as
-três condições de crítico ficam \emph{acima} de \texttt{sampling} em vitórias do
-ciclo (\GcegisCiclo{}, \GcritCiclo{} e \GnoorCiclo{} contra \GsampCiclo{}). As
-diferenças são pequenas e nenhuma é significativa, mas a direção depende de qual
-quantidade se observa.
+O poder efetivo de uma comparação entre arquiteturas de agentes é, portanto, bem
+menor do que $n$ sugere. E descontada a primeira geração, as três condições de
+crítico ficam \emph{acima} de \texttt{sampling} em vitórias do ciclo
+(\GcegisCiclo{}, \GcritCiclo{} e \GnoorCiclo{} contra \GsampCiclo{}) — direção
+oposta à do número bruto, com diferenças pequenas e nenhuma significativa.
 
 O efeito replica numa medição independente sobre as mesmas tarefas, restrita a
 \texttt{sampling} e \texttt{critic}: \BsampPrimeira{} das \BsampRes{} vitórias de
@@ -549,25 +541,22 @@ construção.}
 \end{figure}
 
 As comparações acima não são significativas, mas a ordenação que produzem é
-frequentemente o que sobra de um estudo desses. Para medir quanto dela é
-reprodutível, subamostramos o conjunto fechado de \An{} tarefas sem reposição,
-preservando o pareamento, em \SubRep{} repetições por tamanho
-(Figura~\ref{fig:estabilidade}).
+frequentemente o que sobra de um estudo desses. Subamostramos então o conjunto
+fechado de \An{} tarefas sem reposição, preservando o pareamento, em \SubRep{}
+repetições por tamanho (Figura~\ref{fig:estabilidade}).
 
 Com \SubNa{} tarefas, a direção observada em \An{} se reproduz em \SubDirA\% das
 subamostras — indistinguível de um sorteio — e a banda de 5 a 95\% da diferença de
 acurácia vai de \SubBandaAlo{} a \SubBandaAhi~pp; com \SubNb{}, ainda \SubDirB\%.
-A ordenação completa das quatro condições é bem mais frágil: \SubOrdA\% e
-\SubOrdB\%. Estudos desta classe conduzidos em algumas dezenas de tarefas não
-estão medindo direção. E como a subamostragem capta apenas variância de
-\emph{amostra}, esses valores são um piso otimista.
+A ordenação completa das quatro condições é mais frágil: \SubOrdA\% e \SubOrdB\%.
+Estudos desta classe conduzidos em algumas dezenas de tarefas não estão medindo
+direção. Como a subamostragem capta apenas variância de \emph{amostra}, esses
+valores são um piso otimista.
 
-O mesmo conjunto quantifica o risco de extrapolar antes do fechamento: sobre as
-primeiras \ProjN{} tarefas, extrapolar linearmente as proporções da comparação
-mais próxima produzia $p$ = \ProjPextrapolado{}, valor que teria atravessado a
-correção de Bonferroni, contra $p$ = \ProjPfinal{} no conjunto fechado. É esse o
-mecanismo que produz literaturas contraditórias sem exigir má conduta
-\citep{button:13}.
+Extrapolar antes do fechamento tem efeito parecido: sobre as primeiras \ProjN{}
+tarefas, projetar linearmente as proporções da comparação mais próxima dava
+$p$ = \ProjPextrapolado{}, que teria atravessado a correção de Bonferroni, contra
+$p$ = \ProjPfinal{} no conjunto fechado \citep{button:13}.
 
 \section{Discussão e Limitações}
 
