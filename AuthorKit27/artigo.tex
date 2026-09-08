@@ -259,14 +259,14 @@ idêntico é o controle experimental central.
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[node distance=4.5mm]
-  \node[proc] (task) {tarefa: pares de treino\\ + entrada do teste};
-  \node[agente, below=of task] (gen) {\textbf{Gerador} (LLM)\\ propõe regra + programa};
-  \node[proc, below=of gen] (exec) {\textbf{Executor} (sandbox)\\ roda nos pares de treino};
-  \node[dec, below=of exec] (stop) {todos os pares de treino\\ reproduzidos?};
-  \node[agente, below=9mm of stop] (crit) {\textbf{Crítico} (LLM)\\ aponta contradições};
-  \node[proc, below=of crit] (guard) {filtro anti-vazamento\\ redige grades e código};
-  \node[oraculo, right=7mm of crit] (orac) {oráculo\\ $y^\star_t$};
-  \node[proc, right=7mm of stop] (final) {avaliação final\\ $\pi(x^\star_t) \overset{?}{=} y^\star_t$};
+  \node[proc] (task) {\textbf{(A)} tarefa: pares de treino\\ + entrada do teste};
+  \node[agente, below=of task] (gen) {\textbf{(B) Gerador} (LLM)\\ propõe regra + programa};
+  \node[proc, below=of gen] (exec) {\textbf{(C) Executor} (sandbox)\\ roda nos pares de treino};
+  \node[dec, below=of exec] (stop) {\textbf{(D)} todos os pares de\\ treino reproduzidos?};
+  \node[agente, below=9mm of stop] (crit) {\textbf{(E) Crítico} (LLM)\\ aponta contradições};
+  \node[proc, below=of crit] (guard) {\textbf{(F)} filtro anti-vazamento\\ redige grades e código};
+  \node[oraculo, right=7mm of crit] (orac) {\textbf{(G)} oráculo\\ $y^\star_t$};
+  \node[proc, right=7mm of stop] (final) {\textbf{(H)} avaliação final\\ $\pi(x^\star_t) \overset{?}{=} y^\star_t$};
 
   \draw[fl] (task) -- (gen);
   \draw[fl] (gen) -- (exec);
@@ -277,11 +277,12 @@ idêntico é o controle experimental central.
   \draw[fl] (guard.west) -- ++(-0.75,0) |- (gen.west);
   \draw[fl] (stop) -- node[rot, pos=0.45] {sim} (final);
 \end{tikzpicture}
-\caption{Arquitetura do solucionador. O Gerador nunca vê $y^\star_t$; o Crítico o
-vê (linha tracejada) apenas nas condições que o concedem. A restrição central é
-que $y^\star_t$ não decide nada: o critério de parada e a seleção do candidato
-final olham apenas para os pares de demonstração, e a avaliação final roda uma
-única vez, ao término do laço, só para medir.}
+\caption{Arquitetura do solucionador. O Gerador (B) nunca vê $y^\star_t$; o
+Crítico (E) o recebe do oráculo (G), pela linha tracejada, apenas nas condições
+que o concedem, e sua saída passa pelo filtro (F) antes de voltar ao Gerador. A
+restrição central é que $y^\star_t$ não decide nada: o critério de parada (D)
+olha apenas para os pares de demonstração, e a avaliação final (H) roda uma única
+vez, ao término do laço, só para medir.}
 \label{fig:pipeline}
 \end{figure}
 
